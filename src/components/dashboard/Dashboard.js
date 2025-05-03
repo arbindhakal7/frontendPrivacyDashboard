@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -9,7 +9,8 @@ import {
   Paper,
   CircularProgress,
   Box,
-  Alert
+  Alert,
+  Button
 } from '@mui/material';
 import {
   PieChart, Pie, Cell,
@@ -33,25 +34,55 @@ const Dashboard = () => {
     formTypes: []
   });
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const rawForms = await fetchForms();
-        const forms = processFormData(rawForms);
-        const processedData = analyzeFormsData(forms);
-        setDashboardData(processedData);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load dashboard data');
-        setLoading(false);
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Loading dashboard data...');
+      const rawForms = await fetchForms();
+      console.log('Raw forms:', rawForms);
+      
+      if (!Array.isArray(rawForms)) {
+        console.error('Expected array of forms, got:', typeof rawForms);
+        setError('Invalid data format received from server. Please try again.');
+        return;
       }
-    };
 
+      if (rawForms.length === 0) {
+        console.log('No forms found');
+        setDashboardData({
+          totalForms: 0,
+          recentForms: [],
+          sensitivityDistribution: [
+            { name: 'High Risk', value: 0, color: '#ff4444' },
+            { name: 'Medium Risk', value: 0, color: '#ffbb33' },
+            { name: 'Low Risk', value: 0, color: '#00C851' }
+          ],
+          submissionTrends: [],
+          formTypes: []
+        });
+        return;
+      }
+
+      const forms = processFormData(rawForms);
+      console.log('Processed forms:', forms);
+      const processedData = analyzeFormsData(forms);
+      console.log('Analyzed data:', processedData);
+      setDashboardData(processedData);
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+      setError(err.message || 'Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadDashboardData();
   }, []);
 
   const analyzeFormsData = (forms) => {
-    // Calculate sensitivity distribution
+    // Calculate sensitivity distribution based on field sensitivity
     const sensitivityLevels = {
       high: forms.filter(f => f.overallSensitivity >= 80).length,
       medium: forms.filter(f => f.overallSensitivity >= 50 && f.overallSensitivity < 80).length,
@@ -111,7 +142,24 @@ const Dashboard = () => {
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert 
+          severity="error" 
+          action={
+            <Button 
+              color="inherit" 
+              size="small"
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                loadDashboardData();
+              }}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
       </Container>
     );
   }
@@ -217,7 +265,7 @@ const Dashboard = () => {
                   left: 20,
                   bottom: 5,
                 }}
-              >
+               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -265,6 +313,9 @@ const Dashboard = () => {
                       Sensitive Fields: {form.sensitiveFields.map(f => f.field).join(', ')}
                     </Typography>
                   )}
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    All Fields: {form.fields.map(f => f.field_name).join(', ')}
+                  </Typography>
                   <Link to={`/forms/${form.id}`}>View Details</Link>
                 </CardContent>
               </Card>

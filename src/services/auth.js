@@ -1,58 +1,45 @@
 import api from '../utils/axios';
-import { setAuthToken, setRefreshToken, getRefreshToken, clearTokens } from '../utils/tokenStorage';
+import { setAuthToken, clearTokens } from '../utils/tokenStorage';
 
-export const login = async (username, password) => {
+export const login = async (email, password) => {
   try {
-    const response = await api.post('/api/token/', {
-      username,
-      password
+    const response = await api.post('/api/login/', {
+      email: email,
+      password: password
     });
 
-    const { access, refresh } = response.data;
-    setAuthToken(access);
-    setRefreshToken(refresh);
+    const { token } = response.data;
+    setAuthToken(token);
 
     // Update axios default headers
-    api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     return response.data;
   } catch (error) {
+    console.error('Login error:', error.response?.data || error.message);
     throw error.response?.data || { detail: 'Login failed' };
   }
 };
 
 export const register = async (userData) => {
   try {
-    const response = await api.post('/api/register/', userData);
+    const response = await api.post('/api/register/', {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password
+    });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { detail: 'Registration failed' };
+    if (error.response?.data) {
+      throw error.response.data;
+    }
+    throw { detail: 'Registration failed' };
   }
 };
 
 export const logout = () => {
   clearTokens();
   delete api.defaults.headers.common['Authorization'];
-};
-
-export const refreshToken = async () => {
-  try {
-    const refresh = getRefreshToken();
-    if (!refresh) throw new Error('No refresh token available');
-
-    const response = await api.post('/api/token/refresh/', {
-      refresh
-    });
-
-    const { access } = response.data;
-    setAuthToken(access);
-    api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-
-    return access;
-  } catch (error) {
-    logout();
-    throw error;
-  }
 };
 
 export { isAuthenticated } from '../utils/tokenStorage';

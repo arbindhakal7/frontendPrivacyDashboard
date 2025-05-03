@@ -17,7 +17,7 @@ import { login } from '../../services/auth';
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -33,10 +33,16 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
+    // Validate password length
+    if (formData.password.length < 5) {
+      setError('Password must be at least 5 characters long');
+      return;
+    }
+
+    setLoading(true);
     try {
-      await login(formData.username, formData.password);
+      await login(formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
       setError(err.detail || 'Login failed. Please check your credentials.');
@@ -95,12 +101,13 @@ const Login = () => {
               margin="normal"
               required
               fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
+              id="email"
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
               autoFocus
-              value={formData.username}
+              value={formData.email}
               onChange={handleChange}
               disabled={loading}
             />
@@ -116,6 +123,7 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               disabled={loading}
+              helperText="Password must be at least 5 characters long"
             />
             <Button
               type="submit"

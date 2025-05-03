@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -8,51 +8,26 @@ import {
   Box,
   Container,
   useTheme,
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Divider,
-  ListItemIcon,
-  ListItemText
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import SecurityIcon from '@mui/icons-material/Security';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
-import PersonIcon from '@mui/icons-material/Person';
 import { isAuthenticated, logout } from '../../services/auth';
 
 const Navbar = () => {
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState(null);
   const authenticated = isAuthenticated();
-
-  const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    handleProfileMenuClose();
-    logout();
-    navigate('/login');
-  };
-
-  const handleNavigate = (path) => {
-    handleProfileMenuClose();
-    navigate(path);
-  };
 
   const isActive = (path) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const navItems = authenticated ? [
@@ -123,101 +98,21 @@ const Navbar = () => {
               </Button>
             ))}
           </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {authenticated ? (
-              <>
-                <IconButton
-                  onClick={handleProfileMenuOpen}
-                  sx={{
-                    padding: 1,
-                    border: `1px solid ${theme.palette.divider}`,
-                    '&:hover': {
-                      backgroundColor: 'rgba(25, 118, 210, 0.08)'
-                    }
-                  }}
-                >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
-                    <AccountCircleIcon />
-                  </Avatar>
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleProfileMenuClose}
-                  onClick={handleProfileMenuClose}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                  PaperProps={{
-                    elevation: 0,
-                    sx: {
-                      overflow: 'visible',
-                      filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                      mt: 1.5,
-                      width: 220,
-                      '& .MuiMenuItem-root': {
-                        px: 2,
-                        py: 1,
-                      },
-                      '&:before': {
-                        content: '""',
-                        display: 'block',
-                        position: 'absolute',
-                        top: 0,
-                        right: 14,
-                        width: 10,
-                        height: 10,
-                        bgcolor: 'background.paper',
-                        transform: 'translateY(-50%) rotate(45deg)',
-                        zIndex: 0,
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem onClick={() => handleNavigate('/profile')}>
-                    <ListItemIcon>
-                      <PersonIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Profile" />
-                  </MenuItem>
-                  
-                  <MenuItem onClick={() => handleNavigate('/privacy-settings')}>
-                    <ListItemIcon>
-                      <SettingsIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Privacy Settings" />
-                  </MenuItem>
-                  
-                  <Divider />
-                  
-                  <MenuItem onClick={handleLogout}>
-                    <ListItemIcon>
-                      <LogoutIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Logout" />
-                  </MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <Box>
-                <Button
-                  component={RouterLink}
-                  to="/login"
-                  variant={isActive('/login') ? 'contained' : 'text'}
-                  sx={{ mr: 1 }}
-                >
-                  Login
-                </Button>
-                <Button
-                  component={RouterLink}
-                  to="/register"
-                  variant={isActive('/register') ? 'contained' : 'outlined'}
-                >
-                  Register
-                </Button>
-              </Box>
-            )}
-          </Box>
+          
+          {authenticated && (
+            <Button
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+              sx={{
+                color: theme.palette.error.main,
+                '&:hover': {
+                  backgroundColor: 'rgba(211, 47, 47, 0.08)'
+                }
+              }}
+            >
+              Logout
+            </Button>
+          )}
         </Toolbar>
       </Container>
     </AppBar>

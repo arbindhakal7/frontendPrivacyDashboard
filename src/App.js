@@ -106,58 +106,14 @@ function App() {
               />
 
               {/* Protected Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/forms"
-                element={
-                  <PrivateRoute>
-                    <FormList />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/forms/:id"
-                element={
-                  <PrivateRoute>
-                    <FormDetail />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <Profile />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/privacy-settings"
-                element={
-                  <PrivateRoute>
-                    <PrivacySettings />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+              <Route path="/forms" element={<PrivateRoute><FormList /></PrivateRoute>} />
+              <Route path="/forms/:id" element={<PrivateRoute><FormDetail /></PrivateRoute>} />
+              <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+              <Route path="/privacy-settings" element={<PrivateRoute><PrivacySettings /></PrivateRoute>} />
 
-              {/* Default Route */}
-              <Route 
-                path="/" 
-                element={
-                  isAuthenticated() ? (
-                    <Navigate to="/dashboard" replace />
-                  ) : (
-                    <Navigate to="/login" replace />
-                  )
-                } 
-              />
+              {/* Default Route - Direct to Dashboard */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </Box>
         </Box>
