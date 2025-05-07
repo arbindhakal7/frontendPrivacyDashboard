@@ -195,6 +195,7 @@ export const processFormData = (data) => {
   if (Array.isArray(data) && data.length > 0 && data[0].hasOwnProperty('raw_form_data')) {
     return data.map(form => ({
       ...form,
+      id: form._id,
       ...analyzeSensitivity(form.raw_form_data)
     }));
   }

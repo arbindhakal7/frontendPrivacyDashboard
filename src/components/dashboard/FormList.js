@@ -54,6 +54,7 @@ const FormList = () => {
       try {
         const rawForms = await fetchForms();
         const processedForms = processFormData(rawForms);
+        console.log('Loaded forms:', processedForms);
         setForms(processedForms);
         setLoading(false);
       } catch (error) {
@@ -131,8 +132,8 @@ const filteredForms = forms
   const handleDeleteConfirm = async () => {
     if (!formToDelete) return;
     try {
-      await deleteForm(formToDelete.id);
-      setForms((prevForms) => prevForms.filter(f => f.id !== formToDelete.id));
+      await deleteForm(formToDelete._id);
+      setForms((prevForms) => prevForms.filter(f => f._id !== formToDelete._id));
       setDeleteDialogOpen(false);
       setFormToDelete(null);
     } catch (error) {
