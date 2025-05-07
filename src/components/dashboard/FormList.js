@@ -22,11 +22,18 @@ import {
   MenuItem,
   Grid,
   CircularProgress,
-  Alert
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { fetchForms, processFormData } from '../../utils/axios';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { fetchForms, processFormData, deleteForm } from '../../utils/axios';
 
 const FormList = () => {
   const [forms, setForms] = useState([]);
@@ -37,8 +44,12 @@ const FormList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sensitivityFilter, setSensitivityFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [formToDelete, setFormToDelete] = useState(null);
 
   useEffect(() => {
+    let intervalId;
+
     const loadForms = async () => {
       try {
         const rawForms = await fetchForms();
@@ -53,6 +64,14 @@ const FormList = () => {
     };
 
     loadForms();
+
+    // Set up polling every 10 seconds
+    intervalId = setInterval(() => {
+      loadForms();
+    }, 10000);
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const getSensitivityLevel = (sensitivity) => {
@@ -67,11 +86,13 @@ const FormList = () => {
     return '#00C851';
   };
 
-  const filteredForms = forms
+const filteredForms = forms
     .filter(form => {
+      const url = form.url || '';
+      const pageTitle = form.page_title || '';
       const matchesSearch = 
-        form.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (form.page_title || '').toLowerCase().includes(searchTerm.toLowerCase());
+        url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pageTitle.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSensitivity = 
         sensitivityFilter === 'all' ||
@@ -100,6 +121,30 @@ const FormList = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleDeleteClick = (form) => {
+    setFormToDelete(form);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!formToDelete) return;
+    try {
+      await deleteForm(formToDelete.id);
+      setForms((prevForms) => prevForms.filter(f => f.id !== formToDelete.id));
+      setDeleteDialogOpen(false);
+      setFormToDelete(null);
+    } catch (error) {
+      console.error('Error deleting form:', error);
+      setDeleteDialogOpen(false);
+      setFormToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setFormToDelete(null);
   };
 
   if (loading) {
@@ -221,6 +266,13 @@ const FormList = () => {
                     >
                       <VisibilityIcon />
                     </IconButton>
+                    <IconButton
+                      color="error"
+                      title="Delete Form"
+                      onClick={() => handleDeleteClick(form)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -243,6 +295,24 @@ const FormList = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this form submission?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

@@ -42,7 +42,10 @@ const Login = () => {
 
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
+      const response = await login(formData.email, formData.password);
+      if (response && response.token) {
+        window.postMessage({ type: 'SAVE_AUTH_TOKEN', token: response.token }, '*');
+      }
       navigate('/dashboard');
     } catch (err) {
       setError(err.detail || 'Login failed. Please check your credentials.');

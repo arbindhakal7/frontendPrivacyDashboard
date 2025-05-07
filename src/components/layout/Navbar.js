@@ -40,6 +40,11 @@ const Navbar = () => {
       text: 'Forms',
       path: '/forms',
       icon: <ListAltIcon sx={{ mr: 1 }} />
+    },
+    {
+      text: 'Subscription',
+      path: '/subscription',
+      icon: <SecurityIcon sx={{ mr: 1 }} />
     }
   ] : [];
 
@@ -64,8 +69,7 @@ const Navbar = () => {
           <Typography
             variant="h6"
             noWrap
-            component={RouterLink}
-            to="/"
+            component="div"
             sx={{
               mr: 4,
               display: { xs: 'none', md: 'flex' },
@@ -79,24 +83,59 @@ const Navbar = () => {
           </Typography>
 
           <Box sx={{ display: 'flex', flexGrow: 1 }}>
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                component={RouterLink}
-                to={item.path}
-                startIcon={item.icon}
-                sx={{
-                  mx: 1,
-                  color: isActive(item.path) ? theme.palette.primary.main : theme.palette.text.primary,
-                  backgroundColor: isActive(item.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.08)'
-                  }
-                }}
-              >
-                {item.text}
-              </Button>
-            ))}
+            {authenticated ? (
+              // Show nav items when authenticated
+              navItems.map((item) => (
+                <Button
+                  key={item.path}
+                  component={RouterLink}
+                  to={item.path}
+                  startIcon={item.icon}
+                  sx={{
+                    mx: 1,
+                    color: isActive(item.path) ? theme.palette.primary.main : theme.palette.text.primary,
+                    backgroundColor: isActive(item.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                    }
+                  }}
+                >
+                  {item.text}
+                </Button>
+              ))
+            ) : (
+              // Show Register/Login when not authenticated
+              <>
+                <Button
+                  component={RouterLink}
+                  to="/register"
+                  sx={{
+                    mx: 1,
+                    color: isActive('/register') ? theme.palette.primary.main : theme.palette.text.primary,
+                    backgroundColor: isActive('/register') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                    }
+                  }}
+                >
+                  Register
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to="/login"
+                  sx={{
+                    mx: 1,
+                    color: isActive('/login') ? theme.palette.primary.main : theme.palette.text.primary,
+                    backgroundColor: isActive('/login') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                    }
+                  }}
+                >
+                  Login
+                </Button>
+              </>
+            )}
           </Box>
           
           {authenticated && (

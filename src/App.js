@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -12,6 +12,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './components/profile/Profile';
 import PrivacySettings from './components/settings/PrivacySettings';
+import SubscriptionPage from './components/subscription/SubscriptionPage';
 import Navbar from './components/layout/Navbar';
 import PrivateRoute from './components/layout/PrivateRoute';
 import { isAuthenticated } from './services/auth';
@@ -75,6 +76,11 @@ const theme = createTheme({
 });
 
 function App() {
+  useEffect(() => {
+    // Clear any existing auth state on app startup
+    // localStorage.clear();
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -111,9 +117,13 @@ function App() {
               <Route path="/forms/:id" element={<PrivateRoute><FormDetail /></PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
               <Route path="/privacy-settings" element={<PrivateRoute><PrivacySettings /></PrivateRoute>} />
+              <Route path="/subscription" element={<PrivateRoute><SubscriptionPage /></PrivateRoute>} />
 
-              {/* Default Route - Direct to Dashboard */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              {/* Default Route */}
+              <Route 
+                path="/" 
+                element={<Navigate to="/login" replace />} 
+              />
             </Routes>
           </Box>
         </Box>

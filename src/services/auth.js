@@ -3,13 +3,18 @@ import { setAuthToken, clearTokens } from '../utils/tokenStorage';
 
 export const login = async (email, password) => {
   try {
-    const response = await api.post('/api/login/', {
+    const response = await api.post('/auth/login', {
       email: email,
       password: password
     });
 
     const { token } = response.data;
     setAuthToken(token);
+
+    // Post message to window for extension content script to receive
+    if (window && window.postMessage) {
+      window.postMessage({ type: 'SAVE_AUTH_TOKEN', token: token }, '*');
+    }
 
     // Update axios default headers
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -23,7 +28,7 @@ export const login = async (email, password) => {
 
 export const register = async (userData) => {
   try {
-    const response = await api.post('/api/register/', {
+    const response = await api.post('/auth/register', {
       username: userData.username,
       email: userData.email,
       password: userData.password

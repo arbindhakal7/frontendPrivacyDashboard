@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getPrivacySettings, updatePrivacySettings } from '../../utils/axios';
 import {
   Container,
   Paper,
@@ -80,14 +81,30 @@ const PrivacySettings = () => {
     }));
   };
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setLoading(true);
+      try {
+        const data = await getPrivacySettings();
+        setSettings(data);
+      } catch (err) {
+        console.error('Error fetching privacy settings:', err);
+        setError('Failed to load privacy settings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
   const handleSave = async () => {
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      // API call to save settings would go here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+      await updatePrivacySettings(settings);
       setSuccess('Privacy settings updated successfully!');
     } catch (err) {
       console.error('Error updating privacy settings:', err);

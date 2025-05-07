@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuthToken } from './tokenStorage';
 
 const api = axios.create({
-  baseURL: 'https://7f3a-203-123-66-231.ngrok-free.app',
+  baseURL: 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -48,75 +48,93 @@ api.interceptors.response.use(
 // API Functions
 export const fetchForms = async () => {
   try {
-    console.log('Fetching forms...');
-    const response = await api.get('/api/formdata/');
-    console.log('Raw API Response:', response);
-    console.log('Response Data Type:', typeof response.data);
-    console.log('Response Data:', JSON.stringify(response.data, null, 2));
-
-    // Handle different response formats
-    let data = response.data;
-
-    // If data is a string, try to parse it
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data);
-      } catch (e) {
-        console.error('Failed to parse response data:', e);
-        return [];
-      }
-    }
-
-    // If data is an object with a data property (common in APIs)
-    if (data?.data) {
-      data = data.data;
-    }
-
-    // If data is an object with a results property (common in Django REST Framework)
-    if (data?.results) {
-      data = data.results;
-    }
-
-    // If data is not an array but is an object, try to convert it
-    if (!Array.isArray(data) && typeof data === 'object') {
-      data = Object.values(data);
-    }
-
-    // Final check to ensure we have an array
-    if (!Array.isArray(data)) {
-      console.error('Could not convert data to array:', data);
-      return [];
-    }
-
-    return data;
+    const response = await api.get('/forms');
+    return response.data;
   } catch (error) {
-    console.error('Error fetching forms:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      config: error.config,
-      stack: error.stack
-    });
-    return [];
+    console.error('Error fetching forms:', error);
+    throw error;
   }
 };
 
 export const fetchFormById = async (id) => {
   try {
-    const response = await api.get(`/api/formdata/${id}/`);
+    const response = await api.get(`/forms/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching form ${id}:`, {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data
-    });
+    console.error(`Error fetching form ${id}:`, error);
+    throw error;
+  }
+};
+
+export const deleteForm = async (id) => {
+  try {
+    const response = await api.delete(`/forms/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting form ${id}:`, error);
+    throw error;
+  }
+};
+
+export const getPrivacySettings = async () => {
+  try {
+    const response = await api.get('/privacy');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching privacy settings:', error);
+    throw error;
+  }
+};
+
+export const updatePrivacySettings = async (settings) => {
+  try {
+    const response = await api.put('/privacy', settings);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating privacy settings:', error);
+    throw error;
+  }
+};
+
+export const getProfile = async () => {
+  try {
+    const response = await api.get('/profile');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    throw error;
+  }
+};
+
+export const updateProfile = async (profileData) => {
+  try {
+    const response = await api.put('/profile', profileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    throw error;
+  }
+};
+
+export const changePassword = async (passwordData) => {
+  try {
+    const response = await api.put('/profile/password', passwordData);
+    return response.data;
+  } catch (error) {
+    console.error('Error changing password:', error);
     throw error;
   }
 };
 
 export const analyzeSensitivity = (formData) => {
-  // Analyze form fields for sensitivity
+  if (!formData || typeof formData !== 'object') {
+    return {
+      sensitiveFields: [],
+      overallSensitivity: 0,
+      fieldAnalysis: []
+    };
+  }
+
   const sensitivePatterns = {
     email: /email|e-mail/i,
     phone: /phone|mobile|tel/i,
@@ -174,7 +192,6 @@ export const analyzeSensitivity = (formData) => {
 };
 
 export const processFormData = (data) => {
-  // Handle if data is already in the expected format
   if (Array.isArray(data) && data.length > 0 && data[0].hasOwnProperty('raw_form_data')) {
     return data.map(form => ({
       ...form,
@@ -182,62 +199,17 @@ export const processFormData = (data) => {
     }));
   }
 
-  // If data is an array of form fields, process them
-  if (Array.isArray(data)) {
-    console.log('Processing form fields:', data);
-    
-    // Group fields by form ID
-    const formGroups = data.reduce((acc, field) => {
-      const formId = field.form || field.id || field.form_id;
-      if (!formId) {
-        console.warn('Field missing form ID:', field);
+  if (Array.isArray(data) && data.length > 0 && data[0].hasOwnProperty('fields')) {
+    // Data is an array of form objects with fields array
+    return data.map(form => {
+      const rawFormData = form.fields.reduce((acc, field) => {
+        acc[field.field_name || field.name || ''] = field.field_value || field.value || '';
         return acc;
-      }
-
-      if (!acc[formId]) {
-        acc[formId] = {
-          id: formId,
-          fields: [],
-          url: '',
-          page_title: '',
-          captured_at: field.captured_at || new Date().toISOString(),
-          raw_form_data: {}
-        };
-      }
-      
-      // Handle different field formats
-      const fieldData = {
-        field_name: field.field_name || field.name || '',
-        field_value: field.field_value || field.value || '',
-        field_type: field.field_type || field.type || 'text',
-        is_critical: field.is_critical || false,
-        is_very_critical: field.is_very_critical || false,
-        is_non_critical: field.is_non_critical || false
-      };
-
-      acc[formId].fields.push(fieldData);
-
-      // Update form metadata
-      if (fieldData.field_name === 'url') {
-        acc[formId].url = fieldData.field_value;
-      }
-      if (fieldData.field_name === 'page_title') {
-        acc[formId].page_title = fieldData.field_value;
-      }
-
-      // Add to raw_form_data
-      acc[formId].raw_form_data[fieldData.field_name] = fieldData.field_value;
-      
-      return acc;
-    }, {});
-
-    console.log('Processed form groups:', formGroups);
-
-    // Convert to array and analyze sensitivity
-    return Object.values(formGroups).map(form => {
-      const analysis = analyzeSensitivity(form.raw_form_data);
+      }, {});
+      const analysis = analyzeSensitivity(rawFormData);
       return {
         ...form,
+        raw_form_data: rawFormData,
         ...analysis,
         is_critical: form.fields.some(f => f.is_critical),
         is_very_critical: form.fields.some(f => f.is_very_critical),
