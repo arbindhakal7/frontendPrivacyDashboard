@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -13,15 +13,59 @@ import {
   Button
 } from '@mui/material';
 import {
-  PieChart, Pie, Cell,
-  ResponsiveContainer,
-  BarChart, Bar,
-  XAxis, YAxis, Tooltip,
-  Legend,
-  LineChart, Line,
-  CartesianGrid
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
+  LineChart, Line, CartesianGrid, BarChart, Bar, XAxis, YAxis
 } from 'recharts';
 import { fetchForms, processFormData } from '../../utils/axios';
+
+// Helper Functions
+const inferFormType = (url, title) => {
+  const text = `${url} ${title}`.toLowerCase();
+  if (text.includes('contact')) return 'Contact';
+  if (text.includes('register') || text.includes('signup')) return 'Registration';
+  if (text.includes('feedback')) return 'Feedback';
+  if (text.includes('survey')) return 'Survey';
+  if (text.includes('newsletter')) return 'Newsletter';
+  if (text.includes('login')) return 'Login';
+  if (text.includes('payment')) return 'Payment';
+  return 'Other';
+};
+
+const analyzeFormsData = (forms) => {
+  const sensitivityLevels = {
+    high: forms.filter(f => f.overallSensitivity >= 80).length,
+    medium: forms.filter(f => f.overallSensitivity >= 50 && f.overallSensitivity < 80).length,
+    low: forms.filter(f => f.overallSensitivity < 50).length
+  };
+
+  const dateGroups = forms.reduce((acc, form) => {
+    const date = new Date(form.captured_at).toLocaleDateString();
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
+
+  const typeGroups = forms.reduce((acc, form) => {
+    const type = inferFormType(form.url, form.page_title);
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    totalForms: forms.length,
+    recentForms: forms.slice(-5).reverse(),
+    sensitivityDistribution: [
+      { name: 'High Risk', value: sensitivityLevels.high, color: '#ff4444' },
+      { name: 'Medium Risk', value: sensitivityLevels.medium, color: '#ffbb33' },
+      { name: 'Low Risk', value: sensitivityLevels.low, color: '#00C851' }
+    ],
+    submissionTrends: Object.entries(dateGroups)
+      .map(([date, count]) => ({ date, submissions: count }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)),
+    formTypes: Object.entries(typeGroups)
+      .map(([type, count]) => ({ name: type, submissions: count })),
+    allForms: forms
+  };
+};
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -31,25 +75,23 @@ const Dashboard = () => {
     recentForms: [],
     sensitivityDistribution: [],
     submissionTrends: [],
-    formTypes: []
+    formTypes: [],
+    allForms: []
   });
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [topThreeEntries, setTopThreeEntries] = useState([]);
+  const navigate = useNavigate();
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Loading dashboard data...');
       const rawForms = await fetchForms();
-      console.log('Raw forms:', rawForms);
-      
       if (!Array.isArray(rawForms)) {
-        console.error('Expected array of forms, got:', typeof rawForms);
-        setError('Invalid data format received from server. Please try again.');
+        setError('Invalid data format received from server.');
         return;
       }
-
       if (rawForms.length === 0) {
-        console.log('No forms found');
         setDashboardData({
           totalForms: 0,
           recentForms: [],
@@ -59,73 +101,54 @@ const Dashboard = () => {
             { name: 'Low Risk', value: 0, color: '#00C851' }
           ],
           submissionTrends: [],
-          formTypes: []
+          formTypes: [],
+          allForms: []
         });
         return;
       }
-
       const forms = await processFormData(rawForms);
-      console.log('Processed forms:', forms);
       const processedData = analyzeFormsData(forms);
-      console.log('Analyzed data:', processedData);
       setDashboardData(processedData);
     } catch (err) {
-      console.error('Error loading dashboard data:', err);
-      setError(err.message || 'Failed to load dashboard data. Please try again.');
+      setError(err.message || 'Failed to load dashboard data.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [loadDashboardData]);
 
-  const analyzeFormsData = (forms) => {
-    const sensitivityLevels = {
-      high: forms.filter(f => f.overallSensitivity >= 80).length,
-      medium: forms.filter(f => f.overallSensitivity >= 50 && f.overallSensitivity < 80).length,
-      low: forms.filter(f => f.overallSensitivity < 50).length
-    };
+  const handlePieClick = (data) => {
+    const category = data?.payload?.name;
+    if (!category) return;
 
-    const dateGroups = forms.reduce((acc, form) => {
-      const date = new Date(form.captured_at).toLocaleDateString();
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {});
+    setSelectedCategory(category);
 
-    const typeGroups = forms.reduce((acc, form) => {
-      const type = inferFormType(form.url, form.page_title);
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {});
+    let filteredForms = [];
+    if (category === 'High Risk') {
+      filteredForms = dashboardData.allForms.filter(f => f.overallSensitivity >= 80);
+    } else if (category === 'Medium Risk') {
+      filteredForms = dashboardData.allForms.filter(f => f.overallSensitivity >= 50 && f.overallSensitivity < 80);
+    } else if (category === 'Low Risk') {
+      filteredForms = dashboardData.allForms.filter(f => f.overallSensitivity < 50);
+    }
 
-    return {
-      totalForms: forms.length,
-      recentForms: forms.slice(-5).reverse(),
-      sensitivityDistribution: [
-        { name: 'High Risk', value: sensitivityLevels.high, color: '#ff4444' },
-        { name: 'Medium Risk', value: sensitivityLevels.medium, color: '#ffbb33' },
-        { name: 'Low Risk', value: sensitivityLevels.low, color: '#00C851' }
-      ],
-      submissionTrends: Object.entries(dateGroups)
-        .map(([date, count]) => ({ date, submissions: count }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date)),
-      formTypes: Object.entries(typeGroups)
-        .map(([type, count]) => ({ name: type, submissions: count }))
-    };
+    setTopThreeEntries(filteredForms.slice(0, 3));
   };
 
-  const inferFormType = (url, title) => {
-    const text = `${url} ${title}`.toLowerCase();
-    if (text.includes('contact')) return 'Contact';
-    if (text.includes('register') || text.includes('signup')) return 'Registration';
-    if (text.includes('feedback')) return 'Feedback';
-    if (text.includes('survey')) return 'Survey';
-    if (text.includes('newsletter')) return 'Newsletter';
-    if (text.includes('login')) return 'Login';
-    if (text.includes('payment')) return 'Payment';
-    return 'Other';
+  const handleMoreClick = (category) => {
+    const routes = {
+      'High Risk': '/high-critical-data',
+      'Medium Risk': '/medium-critical',
+      'Low Risk': '/low-critical-data',
+    };
+    if (routes[category]) {
+      navigate(routes[category]);
+    } else {
+      alert('More details page not available for this category.');
+    }
   };
 
   if (loading) {
@@ -139,18 +162,10 @@ const Dashboard = () => {
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           action={
-            <Button 
-              color="inherit" 
-              size="small"
-              onClick={() => {
-                setError(null);
-                setLoading(true);
-                loadDashboardData();
-              }}
-            >
+            <Button color="inherit" size="small" onClick={loadDashboardData}>
               Retry
             </Button>
           }
@@ -163,43 +178,24 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom component="h1">
-        Privacy Dashboard
-      </Typography>
+      <Typography variant="h4" gutterBottom>Privacy Dashboard</Typography>
 
       {dashboardData.totalForms === 0 ? (
-        <Typography variant="body1" sx={{ mt: 4 }}>
-          No form submissions found.
-        </Typography>
+        <Typography>No form submissions found.</Typography>
       ) : (
         <>
           <Grid container spacing={3}>
-            {/* Total Forms Card */}
             <Grid item xs={12} md={4}>
-              <Paper
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 140,
-                }}
-              >
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  Total Forms Captured
-                </Typography>
-                <Typography component="p" variant="h4">
-                  {dashboardData.totalForms}
-                </Typography>
+              <Paper sx={{ p: 2, height: 140 }}>
+                <Typography variant="h6" color="primary">Total Forms Captured</Typography>
+                <Typography variant="h4">{dashboardData.totalForms}</Typography>
               </Paper>
             </Grid>
 
-            {/* Data Sensitivity Distribution */}
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 2, height: 240 }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  Data Sensitivity Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height="100%">
+              <Paper sx={{ p: 2, height: '100%' }}>
+                <Typography variant="h6" color="primary">Data Sensitivity Distribution</Typography>
+                <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie
                       data={dashboardData.sensitivityDistribution}
@@ -207,121 +203,139 @@ const Dashboard = () => {
                       cy="50%"
                       innerRadius={50}
                       outerRadius={80}
-                      paddingAngle={5}
                       dataKey="value"
+                      onClick={handlePieClick}
+                      cursor="pointer"
+                      activeIndex={null}
+                      activeShape={null}
                     >
-                      {dashboardData.sensitivityDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {dashboardData.sensitivityDistribution.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    {/* Disable Tooltip to prevent black box on hover/click */}
+                    {/* <Tooltip /> */}
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
+
+                {selectedCategory && (
+                  <Box mt={2}>
+                    <Typography variant="h6">Top 3 {selectedCategory} Forms</Typography>
+                    {topThreeEntries.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No forms available in this category.
+                      </Typography>
+                    ) : (
+                      <Grid container spacing={2}>
+                        {topThreeEntries.map((form, idx) => (
+                          <Grid item xs={12} md={4} key={form._id || idx}>
+                            <Card>
+                              <CardContent>
+                                <Typography noWrap>{form.url}</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  Captured: {new Date(form.captured_at).toLocaleString()}
+                                </Typography>
+                                <Typography variant="body2" noWrap>
+                                  Title: {form.page_title || 'N/A'}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1, color:
+                                  form.overallSensitivity >= 80
+                                    ? '#ff4444'
+                                    : form.overallSensitivity >= 50
+                                    ? '#ffbb33'
+                                    : '#00C851'
+                                }}>
+                                  Risk Level: {form.overallSensitivity}% - {
+                                    form.overallSensitivity >= 80 ? 'High'
+                                    : form.overallSensitivity >= 50 ? 'Medium'
+                                    : 'Low'
+                                  }
+                                </Typography>
+                                <Link to={`/forms/${form._id || form.id}`}>View Details</Link>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                        <Grid item xs={12} md={4}>
+                          <Box sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+                            <Button variant="outlined" onClick={() => handleMoreClick(selectedCategory)}>
+                              More
+                            </Button>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </Box>
+                )}
               </Paper>
             </Grid>
           </Grid>
 
           <Grid container spacing={3} sx={{ mt: 2 }}>
-            {/* Submission Trends */}
             <Grid item xs={12}>
               <Paper sx={{ p: 2, height: 300 }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  Form Submission Trends
-                </Typography>
+                <Typography variant="h6" color="primary">Form Submission Trends</Typography>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={dashboardData.submissionTrends}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
+                  <LineChart data={dashboardData.submissionTrends}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="submissions" 
-                      stroke="#8884d8" 
-                      name="Submissions"
-                    />
+                    <Line type="monotone" dataKey="submissions" stroke="#8884d8" />
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
 
-            {/* Form Types Distribution */}
             <Grid item xs={12}>
               <Paper sx={{ p: 2, height: 300 }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  Form Types Distribution
-                </Typography>
+                <Typography variant="h6" color="primary">Form Types Distribution</Typography>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={dashboardData.formTypes}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                   >
+                  <BarChart data={dashboardData.formTypes}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="submissions" fill="#8884d8" name="Submissions" />
+                    <Bar dataKey="submissions" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
 
-            {/* Recent Forms */}
             <Grid item xs={12}>
               <Paper sx={{ p: 2 }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                  Recent Form Submissions
-                </Typography>
+                <Typography variant="h6" color="primary">Recent Form Submissions</Typography>
                 {dashboardData.recentForms.map((form) => (
-                  <Card key={form._id || form.id} sx={{ mb: 2 }}>
+                  <Card key={form._id} sx={{ mb: 2 }}>
                     <CardContent>
-                      <Typography variant="h6" component="div">
-                        {form.url}
-                      </Typography>
+                      <Typography variant="h6">{form.url}</Typography>
                       <Typography color="text.secondary">
                         Captured at: {new Date(form.captured_at).toLocaleString()}
                       </Typography>
-                      <Typography variant="body2">
-                        Page Title: {form.page_title || 'N/A'}
-                      </Typography>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: form.overallSensitivity >= 80 ? '#ff4444' : 
-                                 form.overallSensitivity >= 50 ? '#ffbb33' : '#00C851',
-                          mt: 1
-                        }}
-                      >
+                      <Typography>Title: {form.page_title || 'N/A'}</Typography>
+                      <Typography sx={{ color:
+                        form.overallSensitivity >= 80 ? '#ff4444'
+                        : form.overallSensitivity >= 50 ? '#ffbb33'
+                        : '#00C851'
+                      }}>
                         Risk Level: {form.overallSensitivity}% - {
-                          form.overallSensitivity >= 80 ? 'High' :
-                          form.overallSensitivity >= 50 ? 'Medium' : 'Low'
+                          form.overallSensitivity >= 80 ? 'High'
+                          : form.overallSensitivity >= 50 ? 'Medium'
+                          : 'Low'
                         }
                       </Typography>
                       {form.sensitiveFields.length > 0 && (
-                        <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                        <Typography color="error">
                           Sensitive Fields: {form.sensitiveFields.map(f => f.field).join(', ')}
                         </Typography>
                       )}
-                      <Typography variant="body2" sx={{ mt: 1 }}>
+                      <Typography>
                         All Fields: {form.fields.map(f => f.field_name).join(', ')}
                       </Typography>
-                      <Link to={`/forms/${form._id || form.id}`}>View Details</Link>
+                      <Link to={`/forms/${form._id}`}>View Details</Link>
                     </CardContent>
                   </Card>
                 ))}

@@ -17,6 +17,9 @@ import Navbar from './components/layout/Navbar';
 import PrivateRoute from './components/layout/PrivateRoute';
 import { isAuthenticated } from './services/auth';
 
+import HighCritical from './components/dashboard/HighCritical';
+import LowCritical from './components/dashboard/LowCritical';
+
 // Create theme
 const theme = createTheme({
   palette: {
@@ -118,6 +121,8 @@ function App() {
               <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
               <Route path="/privacy-settings" element={<PrivateRoute><PrivacySettings /></PrivateRoute>} />
               <Route path="/subscription" element={<PrivateRoute><SubscriptionPage /></PrivateRoute>} />
+              <Route path="/high-critical" element={<PrivateRoute><HighCritical /></PrivateRoute>} />
+              <Route path="/low-critical" element={<PrivateRoute><LowCritical /></PrivateRoute>} />
 
               {/* Default Route */}
               <Route 

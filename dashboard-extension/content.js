@@ -61,6 +61,7 @@
   }
 
 document.addEventListener('submit', async (event) => {
+    console.log('Form submit event detected - debug log start');
     console.log('Form submit event detected');
     if (!window.__formLabelCaptureEnabled) {
       console.log('Form capture disabled, ignoring submit');
@@ -113,8 +114,7 @@ document.addEventListener('submit', async (event) => {
       if (labelText) {
         const translatedLabel = await translateLabel(labelText);
         fields.push({
-          field_name_original: labelText,
-          field_name_translated: translatedLabel,
+          field_name: labelText,
           field_value: input.value || ''
         });
       }
