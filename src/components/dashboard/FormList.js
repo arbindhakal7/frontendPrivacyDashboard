@@ -54,8 +54,24 @@ const FormList = () => {
       try {
         const rawForms = await fetchForms();
         const processedForms = await processFormData(rawForms);
-        console.log('Loaded forms:', processedForms);
-        setForms(processedForms);
+
+        // Group forms by URL, keep only the latest captured_at timestamp per site
+        const groupedFormsMap = new Map();
+        processedForms.forEach(form => {
+          const url = form.url;
+          const existing = groupedFormsMap.get(url);
+          if (!existing) {
+            groupedFormsMap.set(url, form);
+          } else {
+            if (new Date(form.captured_at) > new Date(existing.captured_at)) {
+              groupedFormsMap.set(url, form);
+            }
+          }
+        });
+        const groupedForms = Array.from(groupedFormsMap.values());
+
+        console.log('Loaded forms:', groupedForms);
+        setForms(groupedForms);
         setLoading(false);
       } catch (error) {
         console.error('Error loading forms:', error);

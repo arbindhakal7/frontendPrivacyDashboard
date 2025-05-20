@@ -107,7 +107,24 @@ const Dashboard = () => {
         return;
       }
       const forms = await processFormData(rawForms);
-      const processedData = analyzeFormsData(forms);
+
+      // Group forms by URL, keep only the latest captured_at timestamp per site
+      const groupedFormsMap = new Map();
+      forms.forEach(form => {
+        const url = form.url;
+        const existing = groupedFormsMap.get(url);
+        if (!existing) {
+          groupedFormsMap.set(url, form);
+        } else {
+          // Compare timestamps and keep the latest
+          if (new Date(form.captured_at) > new Date(existing.captured_at)) {
+            groupedFormsMap.set(url, form);
+          }
+        }
+      });
+      const groupedForms = Array.from(groupedFormsMap.values());
+
+      const processedData = analyzeFormsData(groupedForms);
       setDashboardData(processedData);
     } catch (err) {
       setError(err.message || 'Failed to load dashboard data.');
