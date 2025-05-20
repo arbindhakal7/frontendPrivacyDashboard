@@ -3,15 +3,8 @@
   "name": "Data Guard",
   "version": "1.0",
   "description": "Collects form labels and placeholders when toggled on.",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
-  ],
-  "host_permissions": [
-    "http://localhost/*",
-    "https://localhost/*"
-  ],
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["http://localhost:5000/*", "https://localhost:5000/*"],
   "externally_connectable": {
     "matches": ["http://localhost:3000/*"]
   },

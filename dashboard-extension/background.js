@@ -1,9 +1,13 @@
 /* global chrome */
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Background: Message received', message);
+
   if (message.type === 'formSubmission') {
     const token = message.token;
-    console.log('Background: Received formSubmission message', message);
+    console.log('Background: Token used for authorization:', token);
     console.log('Background: Sending data to backend...');
+
     fetch('http://localhost:5000/api/forms/', {
       method: 'POST',
       headers: {
@@ -11,7 +15,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         'Authorization': token ? `Bearer ${token}` : ''
       },
       body: JSON.stringify(message.data)
-    }).then(response => response.json())
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(result => {
         console.log('Background: Success sending data', result);
         sendResponse({ success: true });
@@ -20,6 +30,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.error('Background: Error sending data', error);
         sendResponse({ success: false, error: error.message });
       });
-    return true; // Keep message channel open for async sendResponse
+
+    return true; // Keeps message channel open
   }
 });
