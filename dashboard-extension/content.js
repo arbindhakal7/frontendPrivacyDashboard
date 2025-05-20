@@ -33,10 +33,43 @@
     });
   }
 
-  document.addEventListener('submit', async (event) => {
+  // Real translation function using LibreTranslate API
+  async function translateLabel(text) {
+    try {
+      const response = await fetch('https://libretranslate.de/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          q: text,
+          source: 'auto',
+          target: 'en',
+          format: 'text'
+        })
+      });
+      if (!response.ok) {
+        console.error('Translation API error:', response.statusText);
+        return text; // fallback to original text
+      }
+      const data = await response.json();
+      return data.translatedText || text;
+    } catch (error) {
+      console.error('Translation API fetch error:', error);
+      return text; // fallback to original text
+    }
+  }
+
+document.addEventListener('submit', async (event) => {
     console.log('Form submit event detected');
     if (!window.__formLabelCaptureEnabled) {
       console.log('Form capture disabled, ignoring submit');
+      return;
+    }
+
+    // Exclude dashboard site from capturing
+    if (window.location.hostname === 'localhost' && window.location.port === '3000') {
+      console.log('Form submission on dashboard site ignored');
       return;
     }
 
@@ -46,9 +79,9 @@
       return;
     }
 
-    const labels = [];
+    const fields = [];
     const inputs = form.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
+    for (const input of inputs) {
       let labelText = '';
 
       if (input.id) {
@@ -65,27 +98,37 @@
         }
       }
 
+      if (!labelText && input.getAttribute('aria-label')) {
+        labelText = input.getAttribute('aria-label').trim();
+      }
+
+      if (!labelText && input.title) {
+        labelText = input.title.trim();
+      }
+
       if (!labelText && input.placeholder) {
         labelText = input.placeholder.trim();
       }
 
       if (labelText) {
-        labels.push(labelText);
+        const translatedLabel = await translateLabel(labelText);
+        fields.push({
+          field_name_original: labelText,
+          field_name_translated: translatedLabel,
+          field_value: input.value || ''
+        });
       }
-    });
+    }
 
-    if (labels.length === 0) {
-      console.log('No labels found in form, skipping');
+    if (fields.length === 0) {
+      console.log('No fields found in form, skipping');
       return;
     }
 
     const formMetadata = {
       url: window.location.href,
       page_title: document.title,
-      fields: labels.map(label => ({
-        field_name: label,
-        field_value: ''
-      }))
+      fields: fields
     };
 
     const token = await getAuthToken();
@@ -95,11 +138,13 @@
     }
 
     console.log('Sending form metadata to background:', formMetadata);
+    console.log('Before sending message to background');
     chrome.runtime.sendMessage({
       type: 'formSubmission',
       data: formMetadata,
       token: token
     }, (response) => {
+      console.log('Message sent to background');
       console.log('Background response:', response);
     });
   });

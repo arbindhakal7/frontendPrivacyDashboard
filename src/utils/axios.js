@@ -126,7 +126,31 @@ export const changePassword = async (passwordData) => {
   }
 };
 
-export const analyzeSensitivity = (formData) => {
+const mockTranslateToEnglish = async (text) => {
+  // Mock translation function - replace with real API call if needed
+  // For demo, just return the input text assuming it's English or close enough
+  return text;
+};
+
+const heuristicClassifyField = async (fieldName) => {
+  const lower = fieldName.toLowerCase();
+
+  if (/(email|e-mail|mail)/i.test(lower)) return { type: 'email', sensitivity: 80 };
+  if (/(phone|mobile|tel|tele)/i.test(lower)) return { type: 'phone', sensitivity: 80 };
+  if (/(address|location|city|country|zip|postal)/i.test(lower)) return { type: 'address', sensitivity: 70 };
+  if (/(name|fullname|firstname|lastname)/i.test(lower)) return { type: 'name', sensitivity: 40 };
+  if (/(password|pwd|pass)/i.test(lower)) return { type: 'password', sensitivity: 100 };
+  if (/(ssn|social|security)/i.test(lower)) return { type: 'ssn', sensitivity: 100 };
+  if (/(credit|card|cvv|ccv|cc)/i.test(lower)) return { type: 'credit', sensitivity: 100 };
+  if (/(birth|dob|birthday)/i.test(lower)) return { type: 'dob', sensitivity: 70 };
+  if (/(account|bank|routing|swift|iban)/i.test(lower)) return { type: 'financial', sensitivity: 90 };
+  if (/(health|medical|diagnosis|prescription)/i.test(lower)) return { type: 'health', sensitivity: 90 };
+
+  // Default low sensitivity
+  return { type: 'unknown', sensitivity: 10 };
+};
+
+export const analyzeSensitivity = async (formData) => {
   if (!formData || typeof formData !== 'object') {
     return {
       sensitiveFields: [],
@@ -135,49 +159,21 @@ export const analyzeSensitivity = (formData) => {
     };
   }
 
-  const sensitivePatterns = {
-    email: /email|e-mail/i,
-    phone: /phone|mobile|tel/i,
-    address: /address|location|city|country|zip|postal/i,
-    name: /name|fullname|firstname|lastname/i,
-    password: /password|pwd|pass/i,
-    ssn: /ssn|social|security/i,
-    credit: /credit|card|cvv|ccv/i,
-    dob: /birth|dob|birthday/i,
-    financial: /account|bank|routing|swift|iban/i,
-    health: /health|medical|diagnosis|prescription/i
-  };
-
-  const sensitivityLevels = {
-    password: 100,
-    ssn: 100,
-    credit: 100,
-    financial: 90,
-    email: 80,
-    phone: 80,
-    health: 90,
-    address: 70,
-    dob: 70,
-    name: 40
-  };
-
   let maxSensitivity = 0;
   const sensitiveFields = [];
 
-  Object.keys(formData).forEach(field => {
-    const fieldLower = field.toLowerCase();
-    
-    Object.entries(sensitivePatterns).forEach(([type, pattern]) => {
-      if (pattern.test(fieldLower)) {
-        sensitiveFields.push({
-          field,
-          type,
-          sensitivity: sensitivityLevels[type]
-        });
-        maxSensitivity = Math.max(maxSensitivity, sensitivityLevels[type]);
-      }
-    });
-  });
+  for (const field of Object.keys(formData)) {
+    const translatedField = await mockTranslateToEnglish(field);
+    const classification = await heuristicClassifyField(translatedField);
+    if (classification.sensitivity > 10) { // Consider only sensitive fields
+      sensitiveFields.push({
+        field,
+        type: classification.type,
+        sensitivity: classification.sensitivity
+      });
+      maxSensitivity = Math.max(maxSensitivity, classification.sensitivity);
+    }
+  }
 
   return {
     sensitiveFields,
@@ -191,32 +187,44 @@ export const analyzeSensitivity = (formData) => {
   };
 };
 
-export const processFormData = (data) => {
-  if (Array.isArray(data) && data.length > 0 && data[0].hasOwnProperty('raw_form_data')) {
-    return data.map(form => ({
-      ...form,
-      id: form._id,
-      ...analyzeSensitivity(form.raw_form_data)
-    }));
+export const processFormData = async (data) => {
+  if (!Array.isArray(data)) {
+    console.error('processFormData expected an array but received:', data);
+    return [];
   }
 
-  if (Array.isArray(data) && data.length > 0 && data[0].hasOwnProperty('fields')) {
+  if (data.length > 0 && data[0].hasOwnProperty('raw_form_data')) {
+    const results = [];
+    for (const form of data) {
+      const analysis = await analyzeSensitivity(form.raw_form_data);
+      results.push({
+        ...form,
+        id: form._id,
+        ...analysis
+      });
+    }
+    return results;
+  }
+
+  if (data.length > 0 && data[0].hasOwnProperty('fields')) {
     // Data is an array of form objects with fields array
-    return data.map(form => {
+    const results = [];
+    for (const form of data) {
       const rawFormData = form.fields.reduce((acc, field) => {
         acc[field.field_name || field.name || ''] = field.field_value || field.value || '';
         return acc;
       }, {});
-      const analysis = analyzeSensitivity(rawFormData);
-      return {
+      const analysis = await analyzeSensitivity(rawFormData);
+      results.push({
         ...form,
         raw_form_data: rawFormData,
         ...analysis,
         is_critical: form.fields.some(f => f.is_critical),
         is_very_critical: form.fields.some(f => f.is_very_critical),
         is_non_critical: form.fields.some(f => f.is_non_critical)
-      };
-    });
+      });
+    }
+    return results;
   }
 
   console.error('Unexpected data format:', data);

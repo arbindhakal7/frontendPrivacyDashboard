@@ -3,6 +3,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'formSubmission') {
     const token = message.token;
     console.log('Background: Received formSubmission message', message);
+    console.log('Background: Sending data to backend...');
     fetch('http://localhost:5000/api/forms/', {
       method: 'POST',
       headers: {

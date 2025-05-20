@@ -58,7 +58,7 @@ const SubscriptionPage = () => {
                 Free Plan
               </Typography>
               <Typography>
-                Access to 10 data items.
+                Access to 4 data items.
               </Typography>
               <Chip label="Free" color="default" sx={{ mt: 1 }} />
             </Paper>

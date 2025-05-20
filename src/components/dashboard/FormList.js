@@ -53,7 +53,7 @@ const FormList = () => {
     const loadForms = async () => {
       try {
         const rawForms = await fetchForms();
-        const processedForms = processFormData(rawForms);
+        const processedForms = await processFormData(rawForms);
         console.log('Loaded forms:', processedForms);
         setForms(processedForms);
         setLoading(false);
@@ -259,21 +259,13 @@ const filteredForms = forms
                     )}
                   </TableCell>
                   <TableCell>
-                    <IconButton
-                      component={Link}
-                      to={`/forms/${form.id}`}
-                      color="primary"
-                      title="View Details"
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      title="Delete Form"
-                      onClick={() => handleDeleteClick(form)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                  <IconButton
+                    color="error"
+                    title="Delete Form"
+                    onClick={() => handleDeleteClick(form)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                   </TableCell>
                 </TableRow>
               ))}

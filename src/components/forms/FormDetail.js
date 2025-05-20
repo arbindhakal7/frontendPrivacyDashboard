@@ -23,7 +23,8 @@ import {
   PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer,
   Tooltip,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell,
+  Legend
 } from 'recharts';
 import { fetchForms, analyzeSensitivity } from '../../utils/axios';
 
@@ -190,16 +191,26 @@ const FormDetail = () => {
                   data={sensitivityData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
+                  innerRadius={80}
+                  outerRadius={100}
+                  paddingAngle={10}
                   dataKey="value"
+                  labelLine={false}
+                  label={({ name, percent, x, y }) => (
+                    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={16} fontWeight="bold" style={{ textShadow: '0 0 6px rgba(0,0,0,0.9)' }}>
+                      {`${name} ${(percent * 100).toFixed(0)}%`}
+                    </text>
+                  )}
+                  isAnimationActive={true}
+                  animationDuration={2000}
+                  animationEasing="ease-out"
                 >
                   {sensitivityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: '#f0f0f0', borderRadius: '8px' }} />
+                <Legend layout="horizontal" verticalAlign="bottom" align="center" height={36} wrapperStyle={{ marginTop: 12, fontWeight: 'bold' }} />
               </PieChart>
             </ResponsiveContainer>
           </Paper>

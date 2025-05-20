@@ -64,7 +64,7 @@ const Dashboard = () => {
         return;
       }
 
-      const forms = processFormData(rawForms);
+      const forms = await processFormData(rawForms);
       console.log('Processed forms:', forms);
       const processedData = analyzeFormsData(forms);
       console.log('Analyzed data:', processedData);
@@ -289,7 +289,7 @@ const Dashboard = () => {
                   Recent Form Submissions
                 </Typography>
                 {dashboardData.recentForms.map((form) => (
-                  <Card key={form.id} sx={{ mb: 2 }}>
+                  <Card key={form._id || form.id} sx={{ mb: 2 }}>
                     <CardContent>
                       <Typography variant="h6" component="div">
                         {form.url}
@@ -321,7 +321,7 @@ const Dashboard = () => {
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         All Fields: {form.fields.map(f => f.field_name).join(', ')}
                       </Typography>
-                      <Link to={`/forms/${form.id}`}>View Details</Link>
+                      <Link to={`/forms/${form._id || form.id}`}>View Details</Link>
                     </CardContent>
                   </Card>
                 ))}
