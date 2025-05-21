@@ -54,9 +54,9 @@ const analyzeFormsData = (forms) => {
     totalForms: forms.length,
     recentForms: forms.slice(-5).reverse(),
     sensitivityDistribution: [
-      { name: 'High Risk', value: sensitivityLevels.high, color: '#ff4444' },
-      { name: 'Medium Risk', value: sensitivityLevels.medium, color: '#ffbb33' },
-      { name: 'Low Risk', value: sensitivityLevels.low, color: '#00C851' }
+      { name: 'High Risk', value: sensitivityLevels.high, color: '#d32f2f' },
+      { name: 'Medium Risk', value: sensitivityLevels.medium, color: '#fbc02d' },
+      { name: 'Low Risk', value: sensitivityLevels.low, color: '#388e3c' }
     ],
     submissionTrends: Object.entries(dateGroups)
       .map(([date, count]) => ({ date, submissions: count }))
@@ -96,9 +96,9 @@ const Dashboard = () => {
           totalForms: 0,
           recentForms: [],
           sensitivityDistribution: [
-            { name: 'High Risk', value: 0, color: '#ff4444' },
-            { name: 'Medium Risk', value: 0, color: '#ffbb33' },
-            { name: 'Low Risk', value: 0, color: '#00C851' }
+            { name: 'High Risk', value: 0, color: '#d32f2f' },
+            { name: 'Medium Risk', value: 0, color: '#fbc02d' },
+            { name: 'Low Risk', value: 0, color: '#388e3c' }
           ],
           submissionTrends: [],
           formTypes: [],
@@ -157,9 +157,9 @@ const Dashboard = () => {
 
   const handleMoreClick = (category) => {
     const routes = {
-      'High Risk': '/high-critical-data',
+      'High Risk': '/high-critical',
       'Medium Risk': '/medium-critical',
-      'Low Risk': '/low-critical-data',
+      'Low Risk': '/low-critical',
     };
     if (routes[category]) {
       navigate(routes[category]);
@@ -170,8 +170,8 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh" sx={{ backgroundColor: '#f5f7fa' }}>
+        <CircularProgress size={60} thickness={5} sx={{ color: '#4169e1' }} />
       </Box>
     );
   }
@@ -186,6 +186,7 @@ const Dashboard = () => {
               Retry
             </Button>
           }
+          sx={{ fontWeight: 600 }}
         >
           {error}
         </Alert>
@@ -195,31 +196,39 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>Privacy Dashboard</Typography>
+      <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#4169e1', letterSpacing: '0.1em' }}>
+        Privacy Dashboard
+      </Typography>
 
       {dashboardData.totalForms === 0 ? (
-        <Typography>No form submissions found.</Typography>
+        <Typography sx={{ color: '#757575', fontSize: '1.2rem' }}>No form submissions found.</Typography>
       ) : (
         <>
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 2, height: 140 }}>
-                <Typography variant="h6" color="primary">Total Forms Captured</Typography>
-                <Typography variant="h4">{dashboardData.totalForms}</Typography>
+              <Paper sx={{ p: 4, height: 160, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
+                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 2 }}>
+                  Total Forms Captured
+                </Typography>
+                <Typography variant="h2" sx={{ fontWeight: 900, color: '#2a3e8f' }}>
+                  {dashboardData.totalForms}
+                </Typography>
               </Paper>
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 2, height: '100%' }}>
-                <Typography variant="h6" color="primary">Data Sensitivity Distribution</Typography>
-                <ResponsiveContainer width="100%" height={240}>
+              <Paper sx={{ p: 4, height: '100%', borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
+                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+                  Data Sensitivity Distribution
+                </Typography>
+                <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie
                       data={dashboardData.sensitivityDistribution}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
+                      innerRadius={70}
+                      outerRadius={100}
                       dataKey="value"
                       onClick={handlePieClick}
                       cursor="pointer"
@@ -230,38 +239,41 @@ const Dashboard = () => {
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
-                    {/* Disable Tooltip to prevent black box on hover/click */}
-                    {/* <Tooltip /> */}
-                    <Legend />
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
                   </PieChart>
                 </ResponsiveContainer>
 
                 {selectedCategory && (
-                  <Box mt={2}>
-                    <Typography variant="h6">Top 3 {selectedCategory} Forms</Typography>
+                  <Box mt={4}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#3556b8', mb: 2 }}>
+                      Top 3 {selectedCategory} Forms
+                    </Typography>
                     {topThreeEntries.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body1" sx={{ color: '#757575' }}>
                         No forms available in this category.
                       </Typography>
                     ) : (
-                      <Grid container spacing={2}>
+                      <Grid container spacing={4}>
                         {topThreeEntries.map((form, idx) => (
                           <Grid item xs={12} md={4} key={form._id || idx}>
-                            <Card>
+                            <Card sx={{ borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.15)', transition: 'box-shadow 0.3s ease', '&:hover': { boxShadow: '0 12px 36px rgba(65, 105, 225, 0.3)' } }}>
                               <CardContent>
-                                <Typography noWrap>{form.url}</Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography noWrap sx={{ fontWeight: 700, color: '#2a3e8f' }}>
+                                  {form.url}
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#616161' }}>
                                   Captured: {new Date(form.captured_at).toLocaleString()}
                                 </Typography>
-                                <Typography variant="body2" noWrap>
+                                <Typography variant="body2" noWrap sx={{ mb: 2 }}>
                                   Title: {form.page_title || 'N/A'}
                                 </Typography>
-                                <Typography variant="body2" sx={{ mt: 1, color:
+                                <Typography variant="body2" sx={{ color:
                                   form.overallSensitivity >= 80
-                                    ? '#ff4444'
+                                    ? '#d32f2f'
                                     : form.overallSensitivity >= 50
-                                    ? '#ffbb33'
-                                    : '#00C851'
+                                    ? '#fbc02d'
+                                    : '#388e3c'
                                 }}>
                                   Risk Level: {form.overallSensitivity}% - {
                                     form.overallSensitivity >= 80 ? 'High'
@@ -269,14 +281,16 @@ const Dashboard = () => {
                                     : 'Low'
                                   }
                                 </Typography>
-                                <Link to={`/forms/${form._id || form.id}`}>View Details</Link>
+                                <Link to={`/forms/${form._id || form.id}`} style={{ color: '#4169e1', fontWeight: 700 }}>
+                                  View Details
+                                </Link>
                               </CardContent>
                             </Card>
                           </Grid>
                         ))}
                         <Grid item xs={12} md={4}>
                           <Box sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
-                            <Button variant="outlined" onClick={() => handleMoreClick(selectedCategory)}>
+                            <Button variant="outlined" sx={{ borderColor: '#4169e1', color: '#4169e1', fontWeight: 700 }} onClick={() => handleMoreClick(selectedCategory)}>
                               More
                             </Button>
                           </Box>
@@ -289,54 +303,70 @@ const Dashboard = () => {
             </Grid>
           </Grid>
 
-          <Grid container spacing={3} sx={{ mt: 2 }}>
+          <Grid container spacing={4} sx={{ mt: 4 }}>
             <Grid item xs={12}>
-              <Paper sx={{ p: 2, height: 300 }}>
-                <Typography variant="h6" color="primary">Form Submission Trends</Typography>
+              <Paper sx={{ p: 4, height: 320, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
+                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+                  Form Submission Trends
+                </Typography>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={dashboardData.submissionTrends}>
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4169e1" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#4169e1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <LineChart data={dashboardData.submissionTrends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="submissions" stroke="#8884d8" />
+                    <Legend verticalAlign="bottom" height={36} />
+                    <Line type="monotone" dataKey="submissions" stroke="#4169e1" strokeWidth={4} activeDot={{ r: 8 }} animationDuration={700} fill="url(#lineGradient)" />
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
 
             <Grid item xs={12}>
-              <Paper sx={{ p: 2, height: 300 }}>
-                <Typography variant="h6" color="primary">Form Types Distribution</Typography>
+              <Paper sx={{ p: 4, height: 320, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
+                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+                  Form Types Distribution
+                </Typography>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dashboardData.formTypes}>
+                  <BarChart data={dashboardData.formTypes} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Legend />
-                    <Bar dataKey="submissions" fill="#8884d8" />
+                    <Legend verticalAlign="bottom" height={36} />
+                    <Bar dataKey="submissions" fill="#4169e1" radius={[10, 10, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
 
             <Grid item xs={12}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" color="primary">Recent Form Submissions</Typography>
+              <Paper sx={{ p: 4, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.15)', backgroundColor: '#e8ecfb' }}>
+                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+                  Recent Form Submissions
+                </Typography>
                 {dashboardData.recentForms.map((form) => (
-                  <Card key={form._id} sx={{ mb: 2 }}>
+                  <Card key={form._id} sx={{ mb: 3, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.15)', transition: 'box-shadow 0.3s ease', '&:hover': { boxShadow: '0 12px 36px rgba(65, 105, 225, 0.3)' } }}>
                     <CardContent>
-                      <Typography variant="h6">{form.url}</Typography>
-                      <Typography color="text.secondary">
+                      <Typography variant="h6" sx={{ color: '#2a3e8f', fontWeight: 700 }}>
+                        {form.url}
+                      </Typography>
+                      <Typography sx={{ color: '#616161' }}>
                         Captured at: {new Date(form.captured_at).toLocaleString()}
                       </Typography>
-                      <Typography>Title: {form.page_title || 'N/A'}</Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        Title: {form.page_title || 'N/A'}
+                      </Typography>
                       <Typography sx={{ color:
-                        form.overallSensitivity >= 80 ? '#ff4444'
-                        : form.overallSensitivity >= 50 ? '#ffbb33'
-                        : '#00C851'
+                        form.overallSensitivity >= 80 ? '#d32f2f'
+                        : form.overallSensitivity >= 50 ? '#fbc02d'
+                        : '#388e3c'
                       }}>
                         Risk Level: {form.overallSensitivity}% - {
                           form.overallSensitivity >= 80 ? 'High'
@@ -345,14 +375,16 @@ const Dashboard = () => {
                         }
                       </Typography>
                       {form.sensitiveFields.length > 0 && (
-                        <Typography color="error">
+                        <Typography color="error" sx={{ mb: 2 }}>
                           Sensitive Fields: {form.sensitiveFields.map(f => f.field).join(', ')}
                         </Typography>
                       )}
                       <Typography>
                         All Fields: {form.fields.map(f => f.field_name).join(', ')}
                       </Typography>
-                      <Link to={`/forms/${form._id}`}>View Details</Link>
+                      <Link to={`/forms/${form._id}`} style={{ color: '#4169e1', fontWeight: 700 }}>
+                        View Details
+                      </Link>
                     </CardContent>
                   </Card>
                 ))}

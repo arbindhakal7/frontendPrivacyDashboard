@@ -1,7 +1,35 @@
+/* Global Styles and Color Palette */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --color-primary: #4a90e2;
+  --color-primary-dark: #357ABD;
+  --color-secondary: #50e3c2;
+  --color-accent: #f5a623;
+  --color-background: #f0f4f8;
+  --color-surface: #ffffff;
+  --color-text-primary: #222222;
+  --color-text-secondary: #555555;
+  --color-error: #ff4444;
+  --color-warning: #ffbb33;
+  --color-success: #00c851;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+}
+
+body, html, #root {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
 .App {
   text-align: left;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
+  padding: 20px;
 }
 
 .container {
@@ -12,24 +40,79 @@
 
 a {
   text-decoration: none;
-  color: inherit;
+  color: var(--color-primary);
+  transition: color 0.3s ease;
+}
+a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
 }
 
 .MuiPaper-root {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--color-shadow);
+  transition: box-shadow 0.3s ease;
+}
+.MuiPaper-root:hover {
+  box-shadow: 0 8px 20px var(--color-shadow);
 }
 
 .MuiTableContainer-root {
-  margin-top: 16px;
+  margin-top: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--color-shadow);
 }
 
 .MuiTableCell-head {
-  font-weight: bold !important;
-  background-color: #f8f9fa;
+  font-weight: 700 !important;
+  background-color: #e6f0ff;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.MuiTableRow-root:hover {
+  background-color: #f0f7ff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .MuiButton-root {
   text-transform: none !important;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.MuiButton-root:hover {
+  box-shadow: 0 4px 12px var(--color-shadow);
+}
+
+.MuiTypography-h4 {
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.MuiTypography-h6 {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin-bottom: 12px;
+}
+
+.MuiCard-root {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--color-shadow);
+  transition: box-shadow 0.3s ease;
+}
+.MuiCard-root:hover {
+  box-shadow: 0 8px 20px var(--color-shadow);
+}
+
+.MuiChip-root {
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
