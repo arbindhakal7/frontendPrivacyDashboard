@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Card, CardContent, Box, CircularProgress, Alert, Button } from '@mui/material';
+import { Container, Typography, Card, CardContent, Box, CircularProgress, Alert } from '@mui/material';
 import { fetchForms, processFormData } from '../../utils/axios';
 import { Link } from 'react-router-dom';
 
@@ -48,21 +48,37 @@ const LowCritical = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom className="fadeInUp">
         Low Critical Data
       </Typography>
       {lowRiskForms.length === 0 ? (
         <Typography>No low critical data found.</Typography>
       ) : (
         lowRiskForms.map(form => (
-          <Card key={form._id || form.id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6">{form.url}</Typography>
-              <Typography color="text.secondary">
+          <Card
+            key={form._id || form.id}
+            sx={{
+              mb: 3,
+              boxShadow: 4,
+              borderRadius: 3,
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              '&:hover': {
+                boxShadow: 8,
+                transform: 'translateY(-6px)',
+              },
+            }}
+          >
+            <CardContent sx={{ px: 3, py: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                {form.url}
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 1 }}>
                 Captured at: {new Date(form.captured_at).toLocaleString()}
               </Typography>
-              <Typography variant="body2">Page Title: {form.page_title || 'N/A'}</Typography>
-              <Typography variant="body2" sx={{ color: '#00C851', mt: 1 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Page Title: {form.page_title || 'N/A'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#388e3c', fontWeight: 'bold', mt: 1 }}>
                 Risk Level: {form.overallSensitivity}% - Low
               </Typography>
               {form.sensitiveFields.length > 0 && (
@@ -73,7 +89,9 @@ const LowCritical = () => {
               <Typography variant="body2" sx={{ mt: 1 }}>
                 All Fields: {form.fields.map(f => f.field_name).join(', ')}
               </Typography>
-              <Link to={`/forms/${form._id || form.id}`}>View Details</Link>
+              <Link to={`/forms/${form._id || form.id}`} style={{ fontWeight: '600', color: '#3f51b5', marginTop: '8px', display: 'inline-block', textDecoration: 'none', transition: 'color 0.3s ease' }} onMouseEnter={e => e.currentTarget.style.color = '#303f9f'} onMouseLeave={e => e.currentTarget.style.color = '#3f51b5'}>
+                View Details
+              </Link>
             </CardContent>
           </Card>
         ))

@@ -5,6 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: transparent;
+  transition: background-color 0.5s ease;
 }
 
 code {
@@ -14,35 +16,38 @@ code {
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #e0eafc;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: #4a90e2;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background: #357abd;
 }
 
 /* Smooth transitions */
 .MuiPaper-root,
 .MuiButton-root,
 .MuiChip-root {
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.3s ease-in-out !important;
 }
 
 /* Chart tooltips */
 .recharts-tooltip-wrapper {
   background-color: rgba(255, 255, 255, 0.96) !important;
-  border-radius: 4px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  transition: box-shadow 0.3s ease;
 }
 
 /* Pre tag styling for JSON display */
@@ -53,5 +58,6 @@ pre {
   font-size: 14px;
   line-height: 1.5;
   background-color: #f5f5f5;
-  border-radius: 4px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
