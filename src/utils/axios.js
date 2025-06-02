@@ -46,6 +46,7 @@ api.interceptors.response.use(
 );
 
 // OpenAI API integration for sensitivity classification
+/*
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -86,6 +87,7 @@ const callOpenAISensitivityAPI = async (fieldName) => {
     return null;
   }
 };
+*/
 
 const mockTranslateToEnglish = async (text) => {
   // Mock translation function - replace with real API call if needed
@@ -127,13 +129,13 @@ export const analyzeSensitivity = async (formData) => {
     const translatedField = await mockTranslateToEnglish(field);
 
     // Call OpenAI API for sensitivity classification
+    /*
     let sensitivity = await callOpenAISensitivityAPI(translatedField);
+    */
 
     // Fallback to heuristic if API fails or returns null
-    if (sensitivity === null) {
-      const classification = await heuristicClassifyField(translatedField);
-      sensitivity = classification.sensitivity;
-    }
+    const classification = await heuristicClassifyField(translatedField);
+    const sensitivity = classification.sensitivity;
 
     if (sensitivity > 10) { // Consider only sensitive fields
       sensitiveFields.push({

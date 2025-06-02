@@ -10,7 +10,8 @@ import {
   CircularProgress,
   Box,
   Alert,
-  Button
+  Button,
+  useTheme
 } from '@mui/material';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -54,9 +55,9 @@ const analyzeFormsData = (forms) => {
     totalForms: forms.length,
     recentForms: forms.slice(-5).reverse(),
     sensitivityDistribution: [
-      { name: 'High Risk', value: sensitivityLevels.high, color: '#d32f2f' },
-      { name: 'Medium Risk', value: sensitivityLevels.medium, color: '#fbc02d' },
-      { name: 'Low Risk', value: sensitivityLevels.low, color: '#388e3c' }
+      { name: 'High Risk', value: sensitivityLevels.high, color: '#FF6B6B' },
+      { name: 'Medium Risk', value: sensitivityLevels.medium, color: '#FFB800' },
+      { name: 'Low Risk', value: sensitivityLevels.low, color: '#4ECDC4' }
     ],
     submissionTrends: Object.entries(dateGroups)
       .map(([date, count]) => ({ date, submissions: count }))
@@ -68,6 +69,7 @@ const analyzeFormsData = (forms) => {
 };
 
 const Dashboard = () => {
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState({
@@ -96,9 +98,9 @@ const Dashboard = () => {
           totalForms: 0,
           recentForms: [],
           sensitivityDistribution: [
-            { name: 'High Risk', value: 0, color: '#d32f2f' },
-            { name: 'Medium Risk', value: 0, color: '#fbc02d' },
-            { name: 'Low Risk', value: 0, color: '#388e3c' }
+            { name: 'High Risk', value: 0, color: '#FF6B6B' },
+            { name: 'Medium Risk', value: 0, color: '#FFB800' },
+            { name: 'Low Risk', value: 0, color: '#4ECDC4' }
           ],
           submissionTrends: [],
           formTypes: [],
@@ -195,29 +197,101 @@ const Dashboard = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#4169e1', letterSpacing: '0.1em' }}>
+    <Container maxWidth="lg" sx={{ mt: 6, mb: 6 }}>
+      <Typography 
+        variant="h3" 
+        gutterBottom 
+        sx={{ 
+          fontWeight: 800,
+          color: theme.palette.primary.main,
+          letterSpacing: '0.02em',
+          mb: 4,
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: -8,
+            left: 0,
+            width: 60,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: theme.palette.primary.main,
+            transition: 'width 0.3s ease',
+          },
+          '&:hover::after': {
+            width: 120,
+          }
+        }}
+      >
         Privacy Dashboard
       </Typography>
 
       {dashboardData.totalForms === 0 ? (
-        <Typography sx={{ color: '#757575', fontSize: '1.2rem' }}>No form submissions found.</Typography>
+        <Typography sx={{ color: theme.palette.text.secondary, fontSize: '1.2rem', fontWeight: 500 }}>
+          No form submissions found.
+        </Typography>
       ) : (
         <>
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 4, height: 160, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
-                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 2 }}>
+              <Paper 
+                sx={{ 
+                  p: 4, 
+                  height: 160, 
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 32px rgba(45, 50, 130, 0.12)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    background: 'linear-gradient(90deg, #2D3282, #4150D9)',
+                  },
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 48px rgba(45, 50, 130, 0.18)',
+                  }
+                }}
+              >
+                <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700, mb: 2 }}>
                   Total Forms Captured
                 </Typography>
-                <Typography variant="h2" sx={{ fontWeight: 900, color: '#2a3e8f' }}>
+                <Typography 
+                  variant="h2" 
+                  sx={{ 
+                    fontWeight: 800,
+                    color: theme.palette.primary.main,
+                    textShadow: '0 2px 4px rgba(45, 50, 130, 0.1)',
+                  }}
+                >
                   {dashboardData.totalForms}
                 </Typography>
               </Paper>
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 4, height: '100%', borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
+              <Paper 
+                sx={{ 
+                  p: 4, 
+                  height: '100%', 
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 32px rgba(45, 50, 130, 0.12)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 48px rgba(45, 50, 130, 0.18)',
+                  }
+                }}
+              >
                 <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
                   Data Sensitivity Distribution
                 </Typography>
@@ -305,69 +379,171 @@ const Dashboard = () => {
 
           <Grid container spacing={4} sx={{ mt: 4 }}>
             <Grid item xs={12}>
-              <Paper sx={{ p: 4, height: 320, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
-                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+              <Paper 
+                sx={{ 
+                  p: 4, 
+                  height: 320, 
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 32px rgba(45, 50, 130, 0.12)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 48px rgba(45, 50, 130, 0.18)',
+                  }
+                }}
+              >
+                <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700, mb: 3 }}>
                   Form Submission Trends
                 </Typography>
                 <ResponsiveContainer width="100%" height="100%">
                   <defs>
                     <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4169e1" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#4169e1" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#2D3282" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#4150D9" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
                   <LineChart data={dashboardData.submissionTrends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(45, 50, 130, 0.1)" />
+                    <XAxis dataKey="date" stroke="#64748B" />
+                    <YAxis stroke="#64748B" />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(45, 50, 130, 0.15)'
+                      }}
+                    />
                     <Legend verticalAlign="bottom" height={36} />
-                    <Line type="monotone" dataKey="submissions" stroke="#4169e1" strokeWidth={4} activeDot={{ r: 8 }} animationDuration={700} fill="url(#lineGradient)" />
+                    <Line 
+                      type="monotone" 
+                      dataKey="submissions" 
+                      stroke="#2D3282" 
+                      strokeWidth={3} 
+                      activeDot={{ r: 6, fill: '#4150D9' }} 
+                      animationDuration={1000} 
+                      fill="url(#lineGradient)" 
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
 
             <Grid item xs={12}>
-              <Paper sx={{ p: 4, height: 320, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.2)', backgroundColor: '#e8ecfb' }}>
-                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+              <Paper 
+                sx={{ 
+                  p: 4, 
+                  height: 320, 
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 32px rgba(45, 50, 130, 0.12)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 48px rgba(45, 50, 130, 0.18)',
+                  }
+                }}
+              >
+                <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700, mb: 3 }}>
                   Form Types Distribution
                 </Typography>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dashboardData.formTypes} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(45, 50, 130, 0.1)" />
+                    <XAxis dataKey="name" stroke="#64748B" />
+                    <YAxis stroke="#64748B" />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(45, 50, 130, 0.15)'
+                      }}
+                    />
                     <Legend verticalAlign="bottom" height={36} />
-                    <Bar dataKey="submissions" fill="#4169e1" radius={[10, 10, 0, 0]} />
+                    <Bar 
+                      dataKey="submissions" 
+                      radius={[8, 8, 0, 0]}
+                      animationDuration={1000}
+                    >
+                      {dashboardData.formTypes.map((entry, index) => {
+                        const colors = [
+                          '#2D3282', '#FF6B6B', '#4ECDC4', '#FFB800',
+                          '#9B59B6', '#E67E22', '#1ABC9C', '#E74C3C'
+                        ];
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={colors[index % colors.length]} 
+                          />
+                        );
+                      })}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
 
             <Grid item xs={12}>
-              <Paper sx={{ p: 4, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.15)', backgroundColor: '#e8ecfb' }}>
-                <Typography variant="h6" sx={{ color: '#3556b8', fontWeight: 700, mb: 3 }}>
+              <Paper 
+                sx={{ 
+                  p: 4, 
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 32px rgba(45, 50, 130, 0.12)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 48px rgba(45, 50, 130, 0.18)',
+                  }
+                }}
+              >
+                <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700, mb: 3 }}>
                   Recent Form Submissions
                 </Typography>
                 {dashboardData.recentForms.map((form) => (
-                  <Card key={form._id} sx={{ mb: 3, borderRadius: 4, boxShadow: '0 8px 24px rgba(65, 105, 225, 0.15)', transition: 'box-shadow 0.3s ease', '&:hover': { boxShadow: '0 12px 36px rgba(65, 105, 225, 0.3)' } }}>
+                  <Card 
+                    key={form._id} 
+                    sx={{ 
+                      mb: 3, 
+                      borderRadius: 4,
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      backdropFilter: 'blur(8px)',
+                      boxShadow: '0 4px 16px rgba(45, 50, 130, 0.08)',
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                      border: '1px solid rgba(45, 50, 130, 0.1)',
+                      '&:hover': { 
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 32px rgba(45, 50, 130, 0.15)',
+                        background: 'rgba(255, 255, 255, 0.95)'
+                      } 
+                    }}
+                  >
                     <CardContent>
-                      <Typography variant="h6" sx={{ color: '#2a3e8f', fontWeight: 700 }}>
+                      <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700, mb: 1 }}>
                         {form.url}
                       </Typography>
-                      <Typography sx={{ color: '#616161' }}>
+                      <Typography sx={{ color: theme.palette.text.secondary, mb: 1 }}>
                         Captured at: {new Date(form.captured_at).toLocaleString()}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: theme.palette.text.primary }}>
                         Title: {form.page_title || 'N/A'}
                       </Typography>
-                      <Typography sx={{ color:
-                        form.overallSensitivity >= 80 ? '#d32f2f'
-                        : form.overallSensitivity >= 50 ? '#fbc02d'
-                        : '#388e3c'
-                      }}>
+                      <Typography 
+                        sx={{ 
+                          color: form.overallSensitivity >= 80 ? '#FF6B6B'
+                            : form.overallSensitivity >= 50 ? '#FFB800'
+                            : '#4ECDC4',
+                          fontWeight: 600,
+                          mb: 2
+                        }}
+                      >
                         Risk Level: {form.overallSensitivity}% - {
                           form.overallSensitivity >= 80 ? 'High'
                           : form.overallSensitivity >= 50 ? 'Medium'
@@ -375,15 +551,26 @@ const Dashboard = () => {
                         }
                       </Typography>
                       {form.sensitiveFields.length > 0 && (
-                        <Typography color="error" sx={{ mb: 2 }}>
+                        <Typography sx={{ color: '#FF6B6B', mb: 2, fontWeight: 500 }}>
                           Sensitive Fields: {form.sensitiveFields.map(f => f.field).join(', ')}
                         </Typography>
                       )}
-                      <Typography>
+                      <Typography sx={{ color: theme.palette.text.secondary, mb: 2 }}>
                         All Fields: {form.fields.map(f => f.field_name).join(', ')}
                       </Typography>
-                      <Link to={`/forms/${form._id}`} style={{ color: '#4169e1', fontWeight: 700 }}>
-                        View Details
+                      <Link 
+                        to={`/forms/${form._id}`} 
+                        style={{ 
+                          color: theme.palette.primary.main, 
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          borderBottom: `2px solid transparent`,
+                          transition: 'border-color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.borderBottomColor = theme.palette.primary.main}
+                        onMouseLeave={(e) => e.target.style.borderBottomColor = 'transparent'}
+                      >
+                        View Details →
                       </Link>
                     </CardContent>
                   </Card>

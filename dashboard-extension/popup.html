@@ -6,22 +6,32 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-width: 250px;
+      min-width: 280px;
       padding: 20px;
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      color: white;
+      background: linear-gradient(135deg, #5a67d8 0%, #63b3ed 100%);
+      color: #f0f0f0;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
-      opacity: 0.85; /* Added transparency */
+      user-select: none;
     }
+
     h1 {
-      font-size: 20px;
+      font-size: 22px;
       margin: 0;
-      font-weight: 700;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      font-weight: 600;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
+    h1::before {
+      content: "🔒";
+      font-size: 24px;
+    }
+
     .toggle-container {
       display: flex;
       align-items: center;
@@ -29,7 +39,10 @@
       font-size: 16px;
       cursor: pointer;
       user-select: none;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
+
     /* Styled toggle switch */
     .switch {
       position: relative;
@@ -37,19 +50,23 @@
       width: 50px;
       height: 24px;
     }
+
     .switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
+
     .slider {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
       background-color: #ccc;
-      transition: .4s;
+      transition: .3s;
       border-radius: 24px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.15);
     }
+
     .slider:before {
       position: absolute;
       content: "";
@@ -58,32 +75,49 @@
       left: 3px;
       bottom: 3px;
       background-color: white;
-      transition: .4s;
+      transition: .3s;
       border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
+
     input:checked + .slider {
-      background-color: #4caf50;
+      background-color: #48bb78;
+      box-shadow: 0 0 6px #48bb78;
     }
+
     input:checked + .slider:before {
       transform: translateX(26px);
     }
+
+    input:focus + .slider {
+      box-shadow: 0 0 6px #48bb78;
+    }
+
     button#dashboardBtn {
-      background-color: #ff9800;
+      background-color: #ed8936;
       border: none;
-      padding: 10px 20px;
-      border-radius: 25px;
+      padding: 10px 22px;
+      border-radius: 20px;
       font-size: 16px;
       font-weight: 600;
       color: #222;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      transition: background-color 0.3s ease;
-      display: none;
+      box-shadow: 0 3px 8px rgba(237, 137, 54, 0.5);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
       width: 100%;
       text-align: center;
+      display: block;
+      user-select: none;
     }
+
     button#dashboardBtn:hover {
-      background-color: #e68900;
+      background-color: #dd6b20;
+      box-shadow: 0 5px 15px rgba(221, 107, 32, 0.7);
+    }
+
+    button#dashboardBtn:focus {
+      outline: none;
+      box-shadow: 0 0 10px #ed8936;
     }
   </style>
 </head>
