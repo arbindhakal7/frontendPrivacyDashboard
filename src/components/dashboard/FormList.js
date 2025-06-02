@@ -271,8 +271,8 @@ const FormList = () => {
         
         <Grid item xs={12} sm={6} md={3}>
           <Zoom in={true} style={{ transitionDelay: '200ms' }}>
-            <Card 
-              sx={{ 
+            <Link to="/high-critical" style={{ textDecoration: 'none' }}>
+              <Card sx={{ 
                 borderRadius: 4,
                 background: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(12px)',
@@ -280,6 +280,7 @@ const FormList = () => {
                 transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                 overflow: 'hidden',
                 position: 'relative',
+                cursor: 'pointer',
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -294,16 +295,17 @@ const FormList = () => {
                   boxShadow: '0 12px 48px rgba(255, 107, 107, 0.18)',
                 }
               }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ color: '#FF6B6B', fontWeight: 700, mb: 1 }}>
-                  High Risk
-                </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 800, color: '#FF6B6B' }}>
-                  {forms.filter(f => f.overallSensitivity >= 80).length}
-                </Typography>
-              </CardContent>
-            </Card>
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" sx={{ color: '#FF6B6B', fontWeight: 700, mb: 1 }}>
+                    High Risk
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 800, color: '#FF6B6B' }}>
+                    {forms.filter(f => f.overallSensitivity >= 80).length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Link>
           </Zoom>
         </Grid>
 
@@ -347,8 +349,8 @@ const FormList = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Zoom in={true} style={{ transitionDelay: '400ms' }}>
-            <Card 
-              sx={{ 
+            <Link to="/low-critical" style={{ textDecoration: 'none' }}>
+              <Card sx={{ 
                 borderRadius: 4,
                 background: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(12px)',
@@ -356,6 +358,7 @@ const FormList = () => {
                 transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                 overflow: 'hidden',
                 position: 'relative',
+                cursor: 'pointer',
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -370,16 +373,17 @@ const FormList = () => {
                   boxShadow: '0 12px 48px rgba(78, 205, 196, 0.18)',
                 }
               }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ color: '#4ECDC4', fontWeight: 700, mb: 1 }}>
-                  Low Risk
-                </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 800, color: '#4ECDC4' }}>
-                  {forms.filter(f => f.overallSensitivity < 50).length}
-                </Typography>
-              </CardContent>
-            </Card>
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" sx={{ color: '#4ECDC4', fontWeight: 700, mb: 1 }}>
+                    Low Risk
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 800, color: '#4ECDC4' }}>
+                    {forms.filter(f => f.overallSensitivity < 50).length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Link>
           </Zoom>
         </Grid>
       </Grid>
