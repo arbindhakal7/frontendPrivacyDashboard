@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Container,
@@ -33,13 +33,17 @@ import {
   Card,
   CardContent,
   Fade,
-  Zoom
+  Zoom,
+  Divider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import SortIcon from '@mui/icons-material/Sort';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import ErrorIcon from '@mui/icons-material/Error';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import { fetchForms, processFormData, deleteForm } from '../../utils/axios';
 
 const FormList = () => {
@@ -258,11 +262,18 @@ const FormList = () => {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700, mb: 1 }}>
-                  Total Forms
-                </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 800, color: theme.palette.primary.main }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <AssessmentIcon sx={{ color: theme.palette.primary.main, fontSize: 28, mr: 1 }} />
+                  <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
+                    Total Forms
+                  </Typography>
+                </Box>
+                <Typography variant="h3" sx={{ fontWeight: 800, color: theme.palette.primary.main, mb: 1 }}>
                   {forms.length}
+                </Typography>
+                <Divider sx={{ my: 1.5 }} />
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                  Daily Average: {Math.round(forms.length / 7)} forms
                 </Typography>
               </CardContent>
             </Card>
@@ -297,11 +308,18 @@ const FormList = () => {
               }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ color: '#FF6B6B', fontWeight: 700, mb: 1 }}>
-                    High Risk
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 800, color: '#FF6B6B' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <ErrorIcon sx={{ color: '#FF6B6B', fontSize: 28, mr: 1 }} />
+                    <Typography variant="h6" sx={{ color: '#FF6B6B', fontWeight: 700 }}>
+                      High Risk
+                    </Typography>
+                  </Box>
+                  <Typography variant="h3" sx={{ fontWeight: 800, color: '#FF6B6B', mb: 1 }}>
                     {forms.filter(f => f.overallSensitivity >= 80).length}
+                  </Typography>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                    {Math.round((forms.filter(f => f.overallSensitivity >= 80).length / forms.length) * 100)}% of total forms
                   </Typography>
                 </CardContent>
               </Card>
@@ -336,11 +354,18 @@ const FormList = () => {
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ color: '#FFB800', fontWeight: 700, mb: 1 }}>
-                  Medium Risk
-                </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 800, color: '#FFB800' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <TimelineIcon sx={{ color: '#FFB800', fontSize: 28, mr: 1 }} />
+                  <Typography variant="h6" sx={{ color: '#FFB800', fontWeight: 700 }}>
+                    Medium Risk
+                  </Typography>
+                </Box>
+                <Typography variant="h3" sx={{ fontWeight: 800, color: '#FFB800', mb: 1 }}>
                   {forms.filter(f => f.overallSensitivity >= 50 && f.overallSensitivity < 80).length}
+                </Typography>
+                <Divider sx={{ my: 1.5 }} />
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                  {Math.round((forms.filter(f => f.overallSensitivity >= 50 && f.overallSensitivity < 80).length / forms.length) * 100)}% of total forms
                 </Typography>
               </CardContent>
             </Card>
@@ -375,11 +400,18 @@ const FormList = () => {
               }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ color: '#4ECDC4', fontWeight: 700, mb: 1 }}>
-                    Low Risk
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 800, color: '#4ECDC4' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <CheckCircleIcon sx={{ color: '#4ECDC4', fontSize: 28, mr: 1 }} />
+                    <Typography variant="h6" sx={{ color: '#4ECDC4', fontWeight: 700 }}>
+                      Low Risk
+                    </Typography>
+                  </Box>
+                  <Typography variant="h3" sx={{ fontWeight: 800, color: '#4ECDC4', mb: 1 }}>
                     {forms.filter(f => f.overallSensitivity < 50).length}
+                  </Typography>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                    {Math.round((forms.filter(f => f.overallSensitivity < 50).length / forms.length) * 100)}% of total forms
                   </Typography>
                 </CardContent>
               </Card>
