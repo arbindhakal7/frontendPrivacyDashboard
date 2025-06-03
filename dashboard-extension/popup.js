@@ -37,16 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.tabs.query({}, (tabs) => {
       for (const tab of tabs) {
         try {
-          chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            function: setCaptureState,
-            args: [enabled]
-          }).catch(() => {
-            // Silently handle tabs that can't be scripted
-          });
+          chrome.tabs.sendMessage(tab.id, { type: 'updateCaptureState', enabled: enabled });
         } catch (error) {
-          // Log the error for debugging purposes
-          console.error('Error executing script in tab:', tab.id, error);
+          console.error('Error sending message to tab:', tab.id, error);
         }
       }
     });

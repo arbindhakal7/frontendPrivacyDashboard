@@ -1,30 +1,31 @@
 /* global chrome */
 (function () {
-  console.log('Content script loaded');
+  console.log('Content script version 2 loaded');
 
-  window.__formLabelCaptureEnabled = false;
+  let formCaptureEnabled = false;
+  let processingForm = false;
 
+  // Initialize capture state
   chrome.storage.local.get(['captureEnabled'], (result) => {
-    window.__formLabelCaptureEnabled = result.captureEnabled || false;
-    console.log('Form capture enabled:', window.__formLabelCaptureEnabled);
+    formCaptureEnabled = result.captureEnabled || false;
   });
 
+  // Listen for capture state changes
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.captureEnabled) {
-      window.__formLabelCaptureEnabled = changes.captureEnabled.newValue;
-      console.log('Form capture enabled changed:', window.__formLabelCaptureEnabled);
+      formCaptureEnabled = changes.captureEnabled.newValue;
     }
   });
 
+  // Handle auth token storage
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
-    if (event.data && (event.data.type === 'SET_AUTH_TOKEN' || event.data.type === 'SAVE_AUTH_TOKEN') && event.data.token) {
-      chrome.storage.local.set({ auth_token: event.data.token }, () => {
-        console.log('Auth token stored');
-      });
+    if (event.data?.type === 'SET_AUTH_TOKEN' && event.data.token) {
+      chrome.storage.local.set({ auth_token: event.data.token });
     }
   });
 
+  // Get auth token
   function getAuthToken() {
     return new Promise((resolve) => {
       chrome.storage.local.get('auth_token', (result) => {
@@ -33,71 +34,45 @@
     });
   }
 
-  async function translateLabel(text) {
-    try {
-      const response = await fetch('https://libretranslate.de/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          q: text,
-          source: 'auto',
-          target: 'en',
-          format: 'text'
-        })
-      });
-      const data = await response.json();
-      return data.translatedText || text;
-    } catch (error) {
-      console.error('Translation error:', error);
-      return text;
-    }
-  }
-
-  document.addEventListener('submit', async (event) => {
-    if (!window.__formLabelCaptureEnabled) return;
-
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement)) return;
-
-    event.preventDefault(); // prevent reload
-
+  // Extract form data without blocking
+  function extractFormData(form) {
     const fields = [];
-    const inputs = form.querySelectorAll('input, select, textarea');
-
-    for (const input of inputs) {
+    const inputs = form.querySelectorAll('input:not([type="password"]), select, textarea');
+    
+    inputs.forEach(input => {
       let labelText = '';
-
+      
+      // Try to find label
       if (input.id) {
-        const label = form.querySelector(`label[for="${input.id}"]`);
-        if (label) labelText = label.innerText.trim();
+        const label = document.querySelector(`label[for="${input.id}"]`);
+        if (label) labelText = label.textContent.trim();
       }
-
+      
       if (!labelText) {
         const parentLabel = input.closest('label');
-        if (parentLabel) labelText = parentLabel.innerText.trim();
+        if (parentLabel) labelText = parentLabel.textContent.trim();
       }
+      
+      labelText = labelText || input.getAttribute('aria-label') || 
+                 input.getAttribute('placeholder') || 
+                 input.name || 'Unnamed Field';
 
-      if (!labelText && input.getAttribute('aria-label')) {
-        labelText = input.getAttribute('aria-label').trim();
-      }
-
-      if (!labelText && input.title) {
-        labelText = input.title.trim();
-      }
-
-      if (!labelText && input.placeholder) {
-        labelText = input.placeholder.trim();
-      }
-
-      const translatedLabel = labelText ? await translateLabel(labelText) : 'Unnamed Field';
+      // Remove translation call to avoid delay
+      // const translatedLabel = labelText ? await translateLabel(labelText) : 'Unnamed Field';
 
       fields.push({
-        field_name: translatedLabel,
+        field_name: labelText,
         field_value: input.value || ''
       });
-    }
+    });
 
-    if (!fields.length) return;
+    return fields;
+  }
+
+  // Send form data to background
+  async function sendFormData(fields) {
+    const token = await getAuthToken();
+    if (!token) return;
 
     const formMetadata = {
       url: window.location.href,
@@ -105,26 +80,82 @@
       fields: fields
     };
 
-    const token = await getAuthToken();
-    if (!token) {
-      console.warn('No auth token found');
-      return;
-    }
-
     chrome.runtime.sendMessage({
       type: 'formSubmission',
       data: formMetadata,
       token: token
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('Send message failed:', chrome.runtime.lastError.message);
-      } else {
-        console.log('Background response:', response);
+    });
+  }
+
+  // Watch for form submissions using MutationObserver
+  const observer = new MutationObserver((mutations) => {
+    if (!formCaptureEnabled) return;
+
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === 1) { // Element node
+          const forms = node.matches('form') ? [node] : node.getElementsByTagName('form');
+          
+          for (const form of forms) {
+  form.addEventListener('submit', function(event) {
+    if (!formCaptureEnabled) return;
+
+    console.log(`[${new Date().toISOString()}] Form submit event captured`);
+
+    try {
+      const fields = extractFormData(form);
+      console.log(`[${new Date().toISOString()}] Extracted ${fields.length} fields`);
+
+      if (fields.length) {
+        if (window.requestIdleCallback) {
+          requestIdleCallback(() => {
+            console.log(`[${new Date().toISOString()}] Sending form data`);
+            sendFormData(fields);
+          });
+        } else {
+          setTimeout(() => {
+            console.log(`[${new Date().toISOString()}] Sending form data`);
+            sendFormData(fields);
+          }, 0);
+        }
+      }
+    } catch (error) {
+      console.error('Form processing error:', error);
+    }
+  });
+          }
+        }
+      }
+    }
+  });
+
+  // Start observing the document
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  // Handle existing forms
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(event) {
+      if (!formCaptureEnabled || processingForm) return;
+      
+      processingForm = true;
+      
+      try {
+        const fields = extractFormData(form);
+        if (fields.length) {
+          if (window.requestIdleCallback) {
+            requestIdleCallback(() => sendFormData(fields));
+          } else {
+            setTimeout(() => sendFormData(fields), 0);
+          }
+        }
+      } catch (error) {
+        console.error('Form processing error:', error);
+      } finally {
+        processingForm = false;
       }
     });
-
-    setTimeout(() => {
-      form.submit(); // Let the form actually submit now
-    }, 300);
   });
 })();

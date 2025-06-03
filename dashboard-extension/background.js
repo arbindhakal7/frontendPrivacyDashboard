@@ -1,12 +1,15 @@
 /* global chrome */
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Background: Message received', message);
-
   if (message.type === 'formSubmission') {
+    // Send immediate response to not block form submission
+    sendResponse({ received: true });
+
     const token = message.token;
-    console.log('Background: Token used for authorization:', token);
-    console.log('Background: Sending data to backend...');
+    
+    // Create an AbortController for the timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
     fetch('http://localhost:5000/api/forms/', {
       method: 'POST',
@@ -14,23 +17,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : ''
       },
-      body: JSON.stringify(message.data)
+      body: JSON.stringify(message.data),
+      signal: controller.signal
     })
       .then(response => {
+        clearTimeout(timeoutId);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
       .then(result => {
-        console.log('Background: Success sending data', result);
-        sendResponse({ success: true });
+        console.log('Form data saved successfully:', result);
       })
       .catch(error => {
-        console.error('Background: Error sending data', error);
-        sendResponse({ success: false, error: error.message });
+        if (error.name === 'AbortError') {
+          console.warn('Form data submission timed out, but form submission continued');
+        } else {
+          console.error('Error saving form data:', error);
+        }
       });
 
-    return true; // Keeps message channel open
+    // Don't return true since we already sent the response
+    return false;
   }
 });
