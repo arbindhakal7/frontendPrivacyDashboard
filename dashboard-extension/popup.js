@@ -32,6 +32,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Helper function to notify all tabs to update capture state
+  function notifyTabsCaptureState(enabled) {
+    chrome.tabs.query({}, (tabs) => {
+      for (const tab of tabs) {
+        try {
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            function: setCaptureState,
+            args: [enabled]
+          }).catch(() => {
+            // Silently handle tabs that can't be scripted
+          });
+        } catch (error) {
+          // Log the error for debugging purposes
+          console.error('Error executing script in tab:', tab.id, error);
+        }
+      }
+    });
+  }
+
   // Enhanced toggle change handler with animations
   toggle.addEventListener('change', () => {
     const enabled = toggle.checked;
@@ -48,22 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Save state and notify content scripts
     chrome.storage.local.set({ captureEnabled: enabled }, () => {
-      // Notify all tabs to update capture state
-      chrome.tabs.query({}, (tabs) => {
-        for (const tab of tabs) {
-          try {
-            chrome.scripting.executeScript({
-              target: { tabId: tab.id },
-              function: setCaptureState,
-              args: [enabled]
-            }).catch(() => {
-              // Silently handle tabs that can't be scripted
-            });
-          } catch (error) {
-            // Handle permission errors silently
-          }
-        }
-      });
+      notifyTabsCaptureState(enabled);
     });
 
     // Haptic feedback simulation
