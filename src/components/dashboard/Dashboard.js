@@ -632,25 +632,30 @@ const Dashboard = () => {
                   </Box>
 
                   <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={dashboardData.allForms.slice(-30).map(form => ({
+                    <AreaChart data={dashboardData.allForms.slice(-30).map(form => ({
                       date: new Date(form.captured_at).toLocaleDateString(),
                       highRisk: form.sensitiveFields.filter(f => f.sensitivity >= 80).length,
                       mediumRisk: form.sensitiveFields.filter(f => f.sensitivity >= 50 && f.sensitivity < 80).length,
                       lowRisk: form.sensitiveFields.filter(f => f.sensitivity < 50).length,
                     }))}>
+                      <defs>
+                        <linearGradient id="colorHighRisk" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#FF6B6B" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#FF6B6B" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorMediumRisk" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#FFB800" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#FFB800" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorLowRisk" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(45, 50, 130, 0.1)" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#64748B"
-                        tick={{ fontSize: 12 }}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        stroke="#64748B"
-                        tick={{ fontSize: 12 }}
-                        tickLine={false}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
+                      <XAxis dataKey="date" stroke="#64748B" />
+                      <YAxis stroke="#64748B" />
+                      <RechartsTooltip content={<CustomTooltip />} />
                       <Legend 
                         verticalAlign="top"
                         height={36}
@@ -664,34 +669,34 @@ const Dashboard = () => {
                           </span>
                         )}
                       />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="highRisk"
                         name="High Risk Fields"
                         stroke="#FF6B6B"
+                        fillOpacity={1}
+                        fill="url(#colorHighRisk)"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: '#FF6B6B' }}
-                        activeDot={{ r: 6, fill: '#FF6B6B' }}
                       />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="mediumRisk"
                         name="Medium Risk Fields"
                         stroke="#FFB800"
+                        fillOpacity={1}
+                        fill="url(#colorMediumRisk)"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: '#FFB800' }}
-                        activeDot={{ r: 6, fill: '#FFB800' }}
                       />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="lowRisk"
                         name="Low Risk Fields"
                         stroke="#4ECDC4"
+                        fillOpacity={1}
+                        fill="url(#colorLowRisk)"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: '#4ECDC4' }}
-                        activeDot={{ r: 6, fill: '#4ECDC4' }}
                       />
-                    </LineChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </Paper>
               </Fade>

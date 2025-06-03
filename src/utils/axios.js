@@ -45,49 +45,6 @@ api.interceptors.response.use(
   }
 );
 
-// OpenAI API integration for sensitivity classification
-/*
-const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-
-const callOpenAISensitivityAPI = async (fieldName) => {
-  if (!OPENAI_API_KEY) {
-    console.warn('OpenAI API key not set. Falling back to heuristic classification.');
-    return null;
-  }
-
-  const prompt = `Classify the sensitivity of the following data field name on a scale from 0 to 100, where 0 means not sensitive and 100 means highly sensitive. Return only the number.\nField name: "${fieldName}"`;
-
-  try {
-    const response = await axios.post(
-      OPENAI_API_URL,
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 10,
-        temperature: 0
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
-        }
-      }
-    );
-
-    const text = response.data.choices[0].message.content.trim();
-    const sensitivity = parseInt(text, 10);
-    if (isNaN(sensitivity)) {
-      console.warn('OpenAI API returned invalid sensitivity:', text);
-      return null;
-    }
-    return sensitivity;
-  } catch (error) {
-    console.error('Error calling OpenAI API:', error);
-    return null;
-  }
-};
-*/
 
 const mockTranslateToEnglish = async (text) => {
   // Mock translation function - replace with real API call if needed
