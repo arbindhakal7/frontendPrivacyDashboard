@@ -113,6 +113,19 @@ const heuristicClassifyField = async (fieldName) => {
   return { type: 'unknown', sensitivity: 10 };
 };
 
+const callLocalLLMClassifier = async (fieldName) => {
+  try {
+    const response = await axios.post('http://localhost:4000/classify', { fieldName });
+    if (response.data && typeof response.data.sensitivity === 'number') {
+      return response.data.sensitivity;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error calling local LLM classifier:', error);
+    return null;
+  }
+};
+
 export const analyzeSensitivity = async (formData) => {
   if (!formData || typeof formData !== 'object') {
     return {
@@ -128,19 +141,19 @@ export const analyzeSensitivity = async (formData) => {
   for (const field of Object.keys(formData)) {
     const translatedField = await mockTranslateToEnglish(field);
 
-    // Call OpenAI API for sensitivity classification
-    /*
-    let sensitivity = await callOpenAISensitivityAPI(translatedField);
-    */
+    // Call local LLM classifier first
+    let sensitivity = await callLocalLLMClassifier(translatedField);
 
-    // Fallback to heuristic if API fails or returns null
-    const classification = await heuristicClassifyField(translatedField);
-    const sensitivity = classification.sensitivity;
+    // Fallback to heuristic if LLM fails or returns null
+    if (sensitivity === null) {
+      const classification = await heuristicClassifyField(translatedField);
+      sensitivity = classification.sensitivity;
+    }
 
     if (sensitivity > 10) { // Consider only sensitive fields
       sensitiveFields.push({
         field,
-        type: 'unknown', // Could be improved by parsing AI response further
+        type: 'unknown', // Could be improved by parsing LLM response further
         sensitivity
       });
       maxSensitivity = Math.max(maxSensitivity, sensitivity);
@@ -158,6 +171,7 @@ export const analyzeSensitivity = async (formData) => {
     }))
   };
 };
+
 
 export const processFormData = async (data) => {
   if (!Array.isArray(data)) {
