@@ -1,23 +1,41 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const axios = require('axios');
 
-// Placeholder for LLM model integration
-// Replace this with actual Gemma 4B or other local LLM model inference code
+const LM_STUDIO_API_URL = 'http://localhost:8080/api/v1/generate'; // Example LM Studio API endpoint, adjust as needed
+const MODEL_NAME = 'google/gemma-3-12b';
+
 async function classifySensitivity(fieldName) {
-  // Simulate classification with dummy logic
-  const lower = fieldName.toLowerCase();
-  if (/(password|pwd|pass)/i.test(lower)) return 100;
-  if (/(ssn|social|security)/i.test(lower)) return 100;
-  if (/(credit|card|cvv|ccv|cc)/i.test(lower)) return 100;
-  if (/(email|e-mail|mail)/i.test(lower)) return 80;
-  if (/(phone|mobile|tel|tele)/i.test(lower)) return 80;
-  if (/(address|location|city|country|zip|postal)/i.test(lower)) return 70;
-  if (/(birth|dob|birthday)/i.test(lower)) return 70;
-  if (/(account|bank|routing|swift|iban)/i.test(lower)) return 90;
-  if (/(health|medical|diagnosis|prescription)/i.test(lower)) return 90;
-  if (/(name|fullname|firstname|lastname)/i.test(lower)) return 40;
-  return 10; // low sensitivity
+  try {
+    // Prepare prompt for classification
+    const prompt = `Classify the sensitivity of the following form field label on a scale of 0 to 100, where 0 is not sensitive and 100 is highly sensitive. Return only the number.\nField label: "${fieldName}"\nSensitivity score:`;
+
+    // Call LM Studio model API
+    const response = await axios.post(LM_STUDIO_API_URL, {
+      model: MODEL_NAME,
+      prompt: prompt,
+      max_tokens: 5,
+      temperature: 0,
+      top_p: 1,
+      n: 1,
+      stop: ['\n']
+    });
+
+    if (response.data && response.data.generations && response.data.generations.length > 0) {
+      const text = response.data.generations[0].text.trim();
+      const score = parseInt(text, 10);
+      if (!isNaN(score) && score >= 0 && score <= 100) {
+        return score;
+      }
+    }
+    // Fallback if parsing fails
+    return 10;
+  } catch (error) {
+    console.error('Error calling LM Studio model:', error);
+    // Fallback sensitivity score on error
+    return 10;
+  }
 }
 
 const app = express();
