@@ -72,9 +72,13 @@ const heuristicClassifyField = async (fieldName) => {
 
 const callLocalLLMClassifier = async (fieldName) => {
   try {
-    const response = await axios.post('http://localhost:4000/classify', { fieldName });
-    if (response.data && typeof response.data.sensitivity === 'number') {
-      return response.data.sensitivity;
+    const response = await axios.post('http://localhost:8080/api/v1/generate', { model: 'google/gemma-3-12b', prompt: `Classify the sensitivity of the following form field label on a scale of 0 to 100, where 0 is not sensitive and 100 is highly sensitive.\nField label: "${fieldName}"\nSensitivity score:` });
+    if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].text) {
+      const text = response.data.choices[0].text.trim();
+      const sensitivity = parseInt(text, 10);
+      if (!isNaN(sensitivity)) {
+        return sensitivity;
+      }
     }
     return null;
   } catch (error) {
