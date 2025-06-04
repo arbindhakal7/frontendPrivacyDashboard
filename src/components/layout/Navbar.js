@@ -38,6 +38,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
+    // Send message to extension content script to clear auth token
+    window.postMessage({ type: 'CLEAR_AUTH_TOKEN' }, '*');
     navigate('/login');
   };
 

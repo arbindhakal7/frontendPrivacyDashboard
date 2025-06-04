@@ -6,29 +6,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load saved state for capture toggle
   chrome.storage.local.get(['captureEnabled'], (result) => {
     toggle.checked = result.captureEnabled || false;
+    console.log('Popup: initial captureEnabled =', toggle.checked);
   });
 
   // Save state on toggle change and notify content script
   toggle.addEventListener('change', () => {
     const enabled = toggle.checked;
+    console.log('Popup: capture toggle changed to', enabled);
     chrome.storage.local.set({ captureEnabled: enabled }, () => {
-      // Notify all tabs to update capture state
-      chrome.tabs.query({}, (tabs) => {
-        for (const tab of tabs) {
-          chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            function: setCaptureState,
-            args: [enabled]
-          });
-        }
-      });
+      // No need to execute script, content.js listens to storage changes
     });
   });
-
-  // Function to run in content script context to update capture state
-  function setCaptureState(enabled) {
-    window.__formLabelCaptureEnabled = enabled;
-  }
 
   // Check if user is logged in by checking token in chrome.storage.local
   chrome.storage.local.get('auth_token', (result) => {

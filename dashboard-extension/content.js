@@ -17,11 +17,17 @@
     }
   });
 
-  // Handle auth token storage
+  // Handle auth token storage and clearing
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
-    if (event.data?.type === 'SET_AUTH_TOKEN' && event.data.token) {
+    console.log('Content script received message:', event.data);
+    if ((event.data?.type === 'SET_AUTH_TOKEN' || event.data?.type === 'SAVE_AUTH_TOKEN') && event.data.token) {
+      console.log('Content script setting auth_token');
       chrome.storage.local.set({ auth_token: event.data.token });
+    }
+    if (event.data?.type === 'CLEAR_AUTH_TOKEN') {
+      console.log('Content script clearing auth_token');
+      chrome.storage.local.remove('auth_token');
     }
   });
 
