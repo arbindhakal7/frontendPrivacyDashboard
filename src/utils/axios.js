@@ -45,13 +45,6 @@ api.interceptors.response.use(
   }
 );
 
-
-const mockTranslateToEnglish = async (text) => {
-  // Mock translation function - replace with real API call if needed
-  // For demo, just return the input text assuming it's English or close enough
-  return text;
-};
-
 const heuristicClassifyField = async (fieldName) => {
   const lower = fieldName.toLowerCase();
 
@@ -70,9 +63,22 @@ const heuristicClassifyField = async (fieldName) => {
   return { type: 'unknown', sensitivity: 10 };
 };
 
+/**
+ * Calls the LM Studio local LLM API to classify sensitivity of a form field label.
+ * @param {string} fieldName - The form field label to classify.
+ * @returns {number|null} Sensitivity score from 0 to 100, or null if failed.
+ */
 const callLocalLLMClassifier = async (fieldName) => {
   try {
-    const response = await axios.post('http://localhost:8080/api/v1/generate', { model: 'google/gemma-3-12b', prompt: `Classify the sensitivity of the following form field label on a scale of 0 to 100, where 0 is not sensitive and 100 is highly sensitive.\nField label: "${fieldName}"\nSensitivity score:` });
+    const response = await axios.post('http://localhost:8080/v1/completions', {
+      model: 'google/gemma-3-12b',
+      prompt: `Classify the sensitivity of the following form field label on a scale of 0 to 100, where 0 is not sensitive and 100 is highly sensitive.\nField label: "${fieldName}"\nSensitivity score:`,
+      max_tokens: 5,
+      temperature: 0,
+      top_p: 1,
+      n: 1,
+      stop: ["\n"]
+    });
     if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].text) {
       const text = response.data.choices[0].text.trim();
       const sensitivity = parseInt(text, 10);
@@ -87,6 +93,11 @@ const callLocalLLMClassifier = async (fieldName) => {
   }
 };
 
+/**
+ * Analyzes sensitivity of form data fields using LLM classifier with heuristic fallback.
+ * @param {Object} formData - Object with form field labels as keys.
+ * @returns {Object} Analysis result including sensitive fields and overall sensitivity.
+ */
 export const analyzeSensitivity = async (formData) => {
   if (!formData || typeof formData !== 'object') {
     return {
@@ -100,14 +111,12 @@ export const analyzeSensitivity = async (formData) => {
   const sensitiveFields = [];
 
   for (const field of Object.keys(formData)) {
-    const translatedField = await mockTranslateToEnglish(field);
-
     // Call local LLM classifier first
-    let sensitivity = await callLocalLLMClassifier(translatedField);
+    let sensitivity = await callLocalLLMClassifier(field);
 
     // Fallback to heuristic if LLM fails or returns null
     if (sensitivity === null) {
-      const classification = await heuristicClassifyField(translatedField);
+      const classification = await heuristicClassifyField(field);
       sensitivity = classification.sensitivity;
     }
 
@@ -133,7 +142,12 @@ export const analyzeSensitivity = async (formData) => {
   };
 };
 
-
+/**
+ * Processes an array of form data objects, analyzing sensitivity for each.
+ * Supports two data formats: with raw_form_data or with fields array.
+ * @param {Array} data - Array of form data objects.
+ * @returns {Array} Array of processed form objects with sensitivity analysis.
+ */
 export const processFormData = async (data) => {
   if (!Array.isArray(data)) {
     console.error('processFormData expected an array but received:', data);
@@ -157,6 +171,7 @@ export const processFormData = async (data) => {
     // Data is an array of form objects with fields array
     const results = [];
     for (const form of data) {
+      // Extract raw form data from fields array
       const rawFormData = form.fields.reduce((acc, field) => {
         acc[field.field_name || field.name || ''] = field.field_value || field.value || '';
         return acc;
